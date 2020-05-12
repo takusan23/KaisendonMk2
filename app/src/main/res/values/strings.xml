@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">KaisendonMk2</string>
+    <string name="login">Login</string>
+    <string name="instance">Instance</string>
+    <string name="access_token">Access token</string>
+    <string name="imananishiteru">Toot</string>
+    <string name="post">Post</string>
+    <string name="status_message">Can I really post?</string>
+    <string name="post_ok">Successfully posted</string>
+    <string name="post_error">Post failed</string>
+    <string name="favourite_ok">I registered as a favorite</string>
+    <string name="boost_ok">I was able to boost</string>
+    <string name="favourite_message">Can I add it to my favorites?</string>
+    <string name="boost_message">Can I boost it?</string>
+    <string name="favourite">Favourite</string>
+    <string name="boost">Boost</string>
+    <string name="error">There was a problem</string>
+</resources>

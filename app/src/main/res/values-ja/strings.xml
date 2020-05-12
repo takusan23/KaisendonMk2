@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KaisendonMk2</string>
+    <string name="login">ログイン</string>
+    <string name="instance">インスタンス</string>
+    <string name="access_token">アクセストークン</string>
+    <string name="imananishiteru">いまなにしてる？</string>
+    <string name="post">投稿</string>
+    <string name="status_message">本当に投稿してもいいですか？</string>
+    <string name="post_ok">投稿に成功しました</string>
+    <string name="post_error">投稿に失敗しました</string>
+    <string name="favourite_ok">ふぁぼりました</string>
+    <string name="boost_ok">ブーストできました</string>
+    <string name="favourite_message">ふぁぼってもいいですか？</string>
+    <string name="boost_message">ブーストしてもいいですか？</string>
+    <string name="favourite">ふぁぼ</string>
+    <string name="boost">ブースト</string>
+    <string name="error">問題が発生しました</string>
+</resources>
