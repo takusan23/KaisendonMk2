@@ -44,8 +44,6 @@ class TimelineRecyclerViewAdapter(val statusDataList: ArrayList<StatusData>) : R
             // トゥート表示
             idTextView.text = "@${status.accountData.acct}"
             setCustomEmojiTextView(this, status)
-            contentTextView.text =
-                HtmlCompat.fromHtml(status.content, HtmlCompat.FROM_HTML_MODE_COMPACT)
             Glide.with(avatarImageView)
                 .load(status.accountData.avatarStatic)
                 .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
@@ -61,7 +59,7 @@ class TimelineRecyclerViewAdapter(val statusDataList: ArrayList<StatusData>) : R
 
     // カスタム絵文字対応！？
     private fun setCustomEmojiTextView(viewHolder: ViewHolder, status: StatusData) {
-        customEmoji.setCustomEmoji(viewHolder.nameTextView, status.accountData.displayName, status.allEmoji)
+        customEmoji.setCustomEmoji(viewHolder.nameTextView, status.accountData.displayName, status.accountData.allEmoji)
         customEmoji.setCustomEmoji(viewHolder.contentTextView, status.content, status.allEmoji)
     }
 

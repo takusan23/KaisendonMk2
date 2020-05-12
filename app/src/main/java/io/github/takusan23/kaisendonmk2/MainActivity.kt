@@ -1,6 +1,5 @@
 package io.github.takusan23.kaisendonmk2
 
-import android.content.Intent
 import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,7 +10,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
 import io.github.takusan23.kaisendonmk2.API.StatusAPI
 import io.github.takusan23.kaisendonmk2.API.getInstanceToken
-import io.github.takusan23.kaisendonmk2.Activity.LoginActivity
+import io.github.takusan23.kaisendonmk2.BottomFragment.MenuBottomSheet
 import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_timeline.*
@@ -33,17 +32,20 @@ class MainActivity : AppCompatActivity() {
 
         prefSetting = PreferenceManager.getDefaultSharedPreferences(this)
 
-        // ログイン情報ない
-        if (prefSetting.getString("instance", null) == null) {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-            return
-        }
+        //  // ログイン情報ない
+        //  if (prefSetting.getString("instance", null) == null) {
+        //      val intent = Intent(this, LoginActivity::class.java)
+        //      startActivity(intent)
+        //      return
+        //  }
 
         // タイムラインFragment
         val fragment = TimeLineFragment()
         fragment.mainActivity = this
         supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment).commit()
+
+        // メニュー初期化
+        initMenu()
 
         // FAB初期化
         initFab()
@@ -51,6 +53,14 @@ class MainActivity : AppCompatActivity() {
         // 投稿部分初期化
         initPostCard()
 
+    }
+
+    private fun initMenu() {
+        bottomAppBar.setNavigationOnClickListener {
+            val menuBottomSheet = MenuBottomSheet()
+            menuBottomSheet.mainActivity = this
+            menuBottomSheet.show(supportFragmentManager, "menu")
+        }
     }
 
     private fun initFab() {
@@ -77,6 +87,10 @@ class MainActivity : AppCompatActivity() {
         activity_main_post_card.visibility = View.VISIBLE
         floatingActionButton.setImageDrawable(getDrawable(R.drawable.ic_close_black_24dp))
     }
+
+    // TimeLineFragment取得
+    fun getTimeLineFragment() =
+        supportFragmentManager.findFragmentById(R.id.activity_main_fragment) as TimeLineFragment
 
     private fun initPostCard() {
         // 投稿ボタン
@@ -128,7 +142,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 
 
 }

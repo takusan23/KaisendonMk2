@@ -68,7 +68,7 @@ class StreamingAPI(val instanceToken: InstanceToken) {
                     val statusData = timeLineParser.parseStatus(payload, instanceToken)
                     receiveMessage(statusData)
                 }
-                if (event == "favourite") {
+                if (event == "notification") {
                     // 通知
                     val payload = jsonObject.getString("payload")
                     val notificationData =

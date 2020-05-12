@@ -78,6 +78,7 @@ class TimeLineParser {
         val accountObject = JSONObject(jsonString)
         val accountId = accountObject.getString("id")
         val userName = accountObject.getString("username")
+        val displayName = accountObject.getString("display_name")
         val acct = accountObject.getString("acct")
         val accountCreatedAt = accountObject.getString("created_at")
         val note = accountObject.getString("note")
@@ -96,7 +97,7 @@ class TimeLineParser {
             instanceToken,
             accountId,
             userName,
-            userName,
+            displayName,
             acct,
             accountCreatedAt,
             note,

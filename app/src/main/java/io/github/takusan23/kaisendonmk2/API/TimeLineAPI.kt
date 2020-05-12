@@ -25,7 +25,7 @@ class TimeLineAPI(val instanceToken: InstanceToken) {
      * ホームタイムラインを取得
      * */
     fun getHomeTimeLine(): Deferred<Response> =
-        timeLine("$BASE_URL/public?access_token=${instanceToken.token}&limit=40")
+        timeLine("$BASE_URL/home?access_token=${instanceToken.token}&limit=40")
 
     // 共通部分
     private fun timeLine(url: String): Deferred<Response> = GlobalScope.async {

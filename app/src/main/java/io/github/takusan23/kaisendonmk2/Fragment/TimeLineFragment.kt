@@ -14,9 +14,13 @@ import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
 import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.R
 import io.github.takusan23.kaisendonmk2.StreamingAPI.StreamingAPI
+import io.github.takusan23.kaisendonmk2.TimeLine.AllTimeLineJSON
+import io.github.takusan23.kaisendonmk2.TimeLine.toUnixTime
 import kotlinx.android.synthetic.main.fragment_timeline.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class TimeLineFragment : Fragment() {
 
@@ -24,9 +28,12 @@ class TimeLineFragment : Fragment() {
 
     // Adapter
     lateinit var timeLineAdapter: TimelineRecyclerViewAdapter
+
+    // RecyclerViewに渡す
     var statusList = arrayListOf<StatusData>()
 
-    lateinit var streamingAPI: StreamingAPI
+    // リアルタイム更新
+    val streamingAPIList = arrayListOf<StreamingAPI>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_timeline, container, false)
@@ -38,38 +45,93 @@ class TimeLineFragment : Fragment() {
         // RecyclerView初期化
         initRecyclerView()
 
-        // TL取得
-        getTimeLine()
+        initAllTimeLine()
+        initAllTimeLineStreaming()
 
-        // ストリーミング接続
-        streamingAPI = StreamingAPI(getInstanceToken(context))
-        setStreaming()
-
-        // すわいぷ
         fragment_timeline_swipe.setOnRefreshListener {
-            statusList.clear()
-            getTimeLine()
+            initAllTimeLine()
         }
 
     }
 
-    // ストリーミングAPIに接続する
-    private fun setStreaming() {
-        GlobalScope.launch {
-            streamingAPI.streamingLocalTL {
-                activity?.runOnUiThread {
-                    // 一番上にいれば一番上に追従する時に必要な値
-                    val intArray = IntArray(2)
-                    val pos =
-                        (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).findFirstVisibleItemPositions(intArray)
-                    // タイムライン追加
-                    statusList.add(0, it)
-                    timeLineAdapter.notifyItemInserted(0)
-                    if (pos[0] == 0 || pos[1] == 0) {
-                        // 一番上にいれば一番上に追従する
-                        (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).scrollToPosition(0)
+
+    // 表示するタイムライン読み込み
+    fun initAllTimeLine() {
+        // UIスレッドではない
+        GlobalScope.launch(Dispatchers.IO) {
+            // くるくる
+            withContext(Dispatchers.Main) {
+                statusList.clear()
+                timeLineAdapter.notifyDataSetChanged()
+                fragment_timeline_swipe.isRefreshing = true
+            }
+            // 読み込む
+            val allTimeLineJSON = AllTimeLineJSON(context)
+            allTimeLineJSON.loadTimeLineSettingJSON().forEach {
+                // 有効時のみ
+                if (it.isEnable) {
+                    // TL取得
+                    val timeLineAPI = TimeLineAPI(it.instanceToken)
+                    val timeLineParser = TimeLineParser()
+                    val response = when (it.timeLineLoad) {
+                        "home_notification" -> timeLineAPI.getHomeTimeLine().await().body?.string()
+                        "local" -> timeLineAPI.getLocalTimeLine().await().body?.string()
+                        else -> timeLineAPI.getHomeTimeLine().await().body?.string()
+                    }
+                    // 追加
+                    timeLineParser.parseTL(response, it.instanceToken).forEach {
+                        statusList.add(it)
                     }
                 }
+            }
+            // 並び替え / 同じID排除 など
+            statusList.sortByDescending { statusData -> toUnixTime(statusData.createdAt) }
+            // UI反映
+            withContext(Dispatchers.Main) {
+                fragment_timeline_swipe.isRefreshing = false
+                timeLineAdapter.notifyDataSetChanged()
+                mainActivity.showSnackBar("取得数：${statusList.size}")
+            }
+        }
+    }
+
+    // 表示するタイムライン読み込み
+    fun initAllTimeLineStreaming() {
+        onDestroy()
+        GlobalScope.launch(Dispatchers.IO) {
+            val allTimeLineJSON = AllTimeLineJSON(context)
+            allTimeLineJSON.loadTimeLineSettingJSON().forEach {
+                // 有効時のみ
+                if (it.isEnable) {
+                    // TL取得
+                    val streamingAPI = StreamingAPI(it.instanceToken)
+                    val timeLineParser = TimeLineParser()
+                    when (it.timeLineLoad) {
+                        "home_notification" -> streamingAPI.streamingUser(::receiveMessage) {
+                            // なにかする
+                        }
+                        "local" -> streamingAPI.streamingLocalTL(::receiveMessage)
+                        else -> streamingAPI.streamingLocalTL(::receiveMessage)
+                    }
+                    streamingAPIList.add(streamingAPI)
+                }
+            }
+        }
+    }
+
+    // ストリーミング受け取る拡張関数
+    fun receiveMessage(statusData: StatusData) {
+        GlobalScope.launch(Dispatchers.Main) {
+            // 一番上にいれば一番上に追従する時に必要な値
+            val intArray = IntArray(2)
+            val pos =
+                (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).findFirstVisibleItemPositions(intArray)
+            // タイムライン追加
+            statusList.add(0, statusData)
+            timeLineAdapter.notifyItemInserted(0)
+            if (pos[0] == 0 || pos[1] == 0) {
+                // 一番上にいれば一番上に追従する
+                (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).scrollToPosition(0)
             }
         }
     }
@@ -107,7 +169,9 @@ class TimeLineFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        streamingAPI.destroy()
+        streamingAPIList.forEach {
+            it.destroy()
+        }
     }
 
 }

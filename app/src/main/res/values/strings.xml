@@ -15,4 +15,14 @@
     <string name="favourite">Favourite</string>
     <string name="boost">Boost</string>
     <string name="error">There was a problem</string>
+    <string name="timeline_edit">Setting the timeline to read</string>
+    <string name="style_edit">Appearance settings</string>
+    <string name="viagei">Client Name</string>
+    <string name="add_timeline">Add timeline</string>
+    <string name="add">Add</string>
+    <string name="home_notification">Home + Notification</string>
+    <string name="local_tl">Local TL</string>
+    <string name="delete_timeline">Can I delete the timeline?</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
 </resources>

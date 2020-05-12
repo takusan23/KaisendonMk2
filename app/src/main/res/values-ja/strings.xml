@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">KaisendonMk2</string>
+    <string name="app_name">かいせんどんMk2</string>
     <string name="login">ログイン</string>
     <string name="instance">インスタンス</string>
     <string name="access_token">アクセストークン</string>
@@ -16,4 +16,14 @@
     <string name="favourite">ふぁぼ</string>
     <string name="boost">ブースト</string>
     <string name="error">問題が発生しました</string>
+    <string name="timeline_edit">読み込むタイムラインの設定</string>
+    <string name="style_edit">見た目の設定</string>
+    <string name="viagei">Via芸（クライアント名変更）</string>
+    <string name="add_timeline">タイムラインの追加</string>
+    <string name="add">追加</string>
+    <string name="home_notification">ホーム+通知</string>
+    <string name="local_tl">ローカルTL</string>
+    <string name="delete_timeline">タイムライン削除してもいいですか？</string>
+    <string name="delete">削除</string>
+    <string name="cancel">キャンセル</string>
 </resources>

@@ -28,10 +28,11 @@
         android:layout_margin="10dp">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/activity_login_token"
+            android:id="@+id/activity_login_via"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/access_token" />
+            android:hint="@string/viagei"
+            android:text="@string/app_name" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <Button
