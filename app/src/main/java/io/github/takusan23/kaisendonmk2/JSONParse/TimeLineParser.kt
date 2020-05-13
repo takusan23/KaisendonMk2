@@ -48,6 +48,12 @@ class TimeLineParser {
         // アカウント情報
         val accountData =
             parseAccount(jsonObject.getJSONObject("account").toString(), instanceToken)
+        // ブースト
+        val boostStatus = if (jsonObject.isNull("reblog")) {
+            null
+        } else {
+            parseStatus(jsonObject.getString("reblog"), instanceToken)
+        }
         // ステータスデータクラス
         val statusData = StatusData(
             instanceToken,
@@ -63,7 +69,8 @@ class TimeLineParser {
             content,
             mediaAttachment,
             card,
-            emojis
+            emojis,
+            boostStatus
         )
         return statusData
     }

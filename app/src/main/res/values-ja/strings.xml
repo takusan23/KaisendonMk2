@@ -30,4 +30,5 @@
     <string name="notification_mention">メンション</string>
     <string name="notification_reblog">ブースト</string>
     <string name="notification_follow">フォロー</string>
+    <string name="boosted">ブーストしました</string>
 </resources>

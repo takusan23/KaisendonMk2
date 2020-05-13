@@ -29,4 +29,5 @@
     <string name="notification_mention">Mention</string>
     <string name="notification_reblog">Boost</string>
     <string name="notification_follow">Follow</string>
+    <string name="boosted">boosted</string>
 </resources>

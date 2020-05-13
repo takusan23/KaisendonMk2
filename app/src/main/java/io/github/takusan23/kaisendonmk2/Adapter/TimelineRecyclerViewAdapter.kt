@@ -39,11 +39,13 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     companion object {
         val TOOT_LAYOUT = 0
         val NOTIFICATION_LAYOUT = 1
+        val TOOT_BOOST_LAYOUT = 2
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         // レイアウト分岐
         val view = when (viewType) {
+            TOOT_BOOST_LAYOUT -> BoostViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_boost, parent, false))
             TOOT_LAYOUT -> TootViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_timeline, parent, false))
             NOTIFICATION_LAYOUT -> NotificationViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_notification, parent, false))
             else -> TootViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_timeline, parent, false))
@@ -54,6 +56,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // 通知と投稿で分岐させる
     override fun getItemViewType(position: Int): Int {
         return when {
+            timeLineItemDataList[position].statusData != null && timeLineItemDataList[position].statusData!!.reblogStatusData != null -> TOOT_BOOST_LAYOUT
             timeLineItemDataList[position].statusData != null -> TOOT_LAYOUT
             timeLineItemDataList[position].notificationData != null -> NOTIFICATION_LAYOUT
             else -> TOOT_LAYOUT
@@ -76,13 +79,13 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     .load(status.accountData.avatarStatic)
                     .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
                     .into(avatarImageView)
-
                 // お気に入り、ブースト
-                initFav(this, status)
-                initBoost(this, status)
-                setFavBoostIcon(this, status)
+                initFav(favoutiteButton, status)
+                initBoost(boostButton, status)
+                applyButton(favoutiteButton, status.favouritesCount.toString(), status.isFavourited, R.drawable.ic_star_border_black_24dp)
+                applyButton(boostButton, status.boostCount.toString(), status.isBoosted, R.drawable.ic_repeat_black_24dp)
                 // 詳細表示
-                initInfo(this, status)
+                initInfo(moreButton, infoTextView, status)
             }
         } else if (holder is NotificationViewHolder) {
             holder.apply {
@@ -106,48 +109,76 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     .load(notificationData.accountData.avatarStatic)
                     .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
                     .into(avatarImageView)
-
                 // statusあればトゥート表示
                 if (notificationData.status != null) {
                     customEmoji.setCustomEmoji(contentTextView, notificationData.status.content, notificationData.status.allEmoji)
                 }
             }
+        } else if (holder is BoostViewHolder) {
+            holder.apply {
+                // トゥート
+                val context = nameTextView.context
+                val status = timeLineItemDataList.get(position).statusData ?: return
+                val reblogStatus = status.reblogStatusData ?: return
+                // TL名
+                timeLineName.text = timeLineItemDataList.get(position).allTimeLineData.timeLineName
+                // ブースト元トゥート表示
+                boostIDTextView.text = "@${reblogStatus.accountData.acct}"
+                customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.accountData.displayName, reblogStatus.accountData.allEmoji)
+                customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.content, reblogStatus.allEmoji)
+                Glide.with(boostAvatarImageView)
+                    .load(reblogStatus.accountData.avatarStatic)
+                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                    .into(boostAvatarImageView)
+                // ブーストしたユーザーのアバター
+                idTextView.text = "@${status.accountData.acct}"
+                customEmoji.setCustomEmoji(nameTextView, "${status.accountData.displayName}<br>${context.getString(R.string.boosted)}", status.accountData.allEmoji)
+                Glide.with(avatarImageView)
+                    .load(status.accountData.avatarStatic)
+                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                    .into(avatarImageView)
+                // お気に入り、ブースト
+                initFav(favoutiteButton, status)
+                initBoost(boostButton, status)
+                applyButton(favoutiteButton, reblogStatus.favouritesCount.toString(), reblogStatus.isFavourited, R.drawable.ic_star_border_black_24dp)
+                applyButton(boostButton, reblogStatus.boostCount.toString(), reblogStatus.isBoosted, R.drawable.ic_repeat_black_24dp)
+                // 詳細表示
+                initInfo(moreButton, infoTextView, status)
+            }
         }
     }
 
-    private fun initInfo(tootViewHolder: TootViewHolder, status: StatusData) {
-        tootViewHolder.apply {
-            // 表示・非表示
-            moreButton.setOnClickListener {
-                if (infoTextView.visibility == View.GONE) {
-                    infoTextView.visibility = View.VISIBLE
-                    (moreButton as MaterialButton).icon =
-                        infoTextView.context.getDrawable(R.drawable.ic_expand_less_black_24dp)
-                    infoVISIBLEList.add(status.id)
-                } else {
-                    infoTextView.visibility = View.GONE
-                    (moreButton as MaterialButton).icon =
-                        infoTextView.context.getDrawable(R.drawable.ic_expand_more_black_24dp)
-                    infoVISIBLEList.remove(status.id)
-                }
-            }
-            // リサイクルされるので
-            if (infoVISIBLEList.contains(status.id)) {
+    private fun initInfo(moreButton: Button, infoTextView: TextView, status: StatusData) {
+        // 表示・非表示
+        moreButton.setOnClickListener {
+            if (infoTextView.visibility == View.GONE) {
                 infoTextView.visibility = View.VISIBLE
                 (moreButton as MaterialButton).icon =
                     infoTextView.context.getDrawable(R.drawable.ic_expand_less_black_24dp)
+                infoVISIBLEList.add(status.id)
             } else {
                 infoTextView.visibility = View.GONE
                 (moreButton as MaterialButton).icon =
                     infoTextView.context.getDrawable(R.drawable.ic_expand_more_black_24dp)
+                infoVISIBLEList.remove(status.id)
             }
+        }
+        // リサイクルされるので
+        if (infoVISIBLEList.contains(status.id)) {
+            infoTextView.visibility = View.VISIBLE
+            (moreButton as MaterialButton).icon =
+                infoTextView.context.getDrawable(R.drawable.ic_expand_less_black_24dp)
+        } else {
+            infoTextView.visibility = View.GONE
+            (moreButton as MaterialButton).icon =
+                infoTextView.context.getDrawable(R.drawable.ic_expand_more_black_24dp)
+        }
 
-            val text = """
+        val text = """
                 投稿日時：${status.createdAt.toTimeFormat()}
                 トゥートID：${status.id}
             """.trimIndent()
-            infoTextView.text = text
-        }
+        infoTextView.text = text
     }
 
     // ふぁぼ/ブーストした後など値を反映させる
@@ -171,10 +202,26 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         }
     }
 
-    private fun initBoost(viewHolder: TootViewHolder, status: StatusData) {
-        val context = viewHolder.boostButton.context
+    /**
+     * ふぁぼ、ブーストを適用する
+     * @param button ボタン
+     * @param defaultDrawable ふぁぼ/ブーストしてないときのDrawable
+     * @param isCheck doneにする場合はtrue
+     * @param text Buttonに入れるテキスト
+     * */
+    private fun applyButton(button: Button, text: String, isCheck: Boolean, defaultDrawable: Int) {
+        button.text = text
+        (button as MaterialButton).icon = if (isCheck) {
+            button.context.getDrawable(R.drawable.ic_done_black_24dp)
+        } else {
+            button.context.getDrawable(defaultDrawable)
+        }
+    }
+
+    private fun initBoost(button: Button, status: StatusData) {
+        val context = button.context
         // ブーストAPI叩く
-        viewHolder.boostButton.setOnClickListener {
+        button.setOnClickListener {
             mainActivity.showSnackBar(context.getString(R.string.boost_message), context.getString(R.string.boost)) {
                 GlobalScope.launch(Dispatchers.Main) {
                     val statusAPI = StatusAPI(status.instanceToken)
@@ -190,7 +237,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         // 反転
                         status.isBoosted = !status.isBoosted
                         // UI反映
-                        setFavBoostIcon(viewHolder, status)
+                        applyButton(button, status.favouritesCount.toString(), status.isFavourited, R.drawable.ic_star_border_black_24dp)
                     } else {
                         mainActivity.showSnackBar("${context.getString(R.string.error)}：${response.code}")
                     }
@@ -199,9 +246,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         }
     }
 
-    private fun initFav(viewHolder: TootViewHolder, status: StatusData) {
-        val context = viewHolder.favoutiteButton.context
-        viewHolder.favoutiteButton.setOnClickListener {
+    private fun initFav(button: Button, status: StatusData) {
+        val context = button.context
+        button.setOnClickListener {
             // 本当に叩いていいか聞く
             mainActivity.showSnackBar(context.getString(R.string.favourite_message), context.getString(R.string.favourite)) {
                 GlobalScope.launch(Dispatchers.Main) {
@@ -220,7 +267,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         // 反転
                         status.isFavourited = !status.isFavourited
                         // UI反映
-                        setFavBoostIcon(viewHolder, status)
+                        applyButton(button, status.favouritesCount.toString(), status.isFavourited, R.drawable.ic_star_border_black_24dp)
                     } else {
                         mainActivity.showSnackBar("${context.getString(R.string.error)}：${response.code}")
                     }
@@ -253,6 +300,31 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
         val contentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_content)
         val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
+    }
+
+    // ブーストViewHolder
+    inner class BoostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
+        val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
+        val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
+        val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
+
+        // Boost
+        val boostNameTextView =
+            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_user_name)
+        val boostIDTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_id)
+        val boostAvatarImageView =
+            itemView.findViewById<ImageView>(R.id.adapter_timeline_boost_avatar)
+        val boostContentTextView =
+            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_content)
+
+        // fav
+        val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
+        val boostButton = itemView.findViewById<Button>(R.id.adapter_timeline_boost)
+
+        // 詳細表示
+        val moreButton = itemView.findViewById<Button>(R.id.adapter_timeline_more)
+        val infoTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_info_textview)
     }
 
     override fun getItemCount(): Int {

@@ -18,5 +18,5 @@ data class StatusData(
     val mediaAttachments: ArrayList<String>,
     val card: CardData?,
     val allEmoji: ArrayList<EmojiData>,
-    val notificationData: NotificationData? = null // 通知の場合はここに値が入ったりする（かも？）
+    val reblogStatusData: StatusData? = null
 )
