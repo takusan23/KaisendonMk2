@@ -31,4 +31,11 @@
     <string name="notification_reblog">ブースト</string>
     <string name="notification_follow">フォロー</string>
     <string name="boosted">ブーストしました</string>
+    <string name="visibility_public">公開TL（LTLに表示）</string>
+    <string name="visibility_unlisted">未収載（LTLに非表示。HTLには表示）</string>
+    <string name="visibility_private">フォロワー限定</string>
+    <string name="visibility_direct">ダイレクト</string>
+    <string name="visibility">公開範囲</string>
+    <string name="account">アカウント</string>
+    <string name="account_switching">アカウント切り替え</string>
 </resources>

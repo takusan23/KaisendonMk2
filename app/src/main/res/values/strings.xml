@@ -30,4 +30,11 @@
     <string name="notification_reblog">Boost</string>
     <string name="notification_follow">Follow</string>
     <string name="boosted">boosted</string>
+    <string name="visibility_public">Public</string>
+    <string name="visibility_unlisted">Unlisted</string>
+    <string name="visibility_private">Private</string>
+    <string name="visibility_direct">Direct</string>
+    <string name="visibility">Visibility</string>
+    <string name="account">Account</string>
+    <string name="account_switching">Account switching</string>
 </resources>

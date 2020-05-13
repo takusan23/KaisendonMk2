@@ -6,22 +6,35 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.view.animation.AnimationUtils
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.preference.PreferenceManager
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.snackbar.Snackbar
+import io.github.takusan23.kaisendonmk2.API.AccountAPI
+import io.github.takusan23.kaisendonmk2.API.InstanceToken
 import io.github.takusan23.kaisendonmk2.API.StatusAPI
 import io.github.takusan23.kaisendonmk2.API.getInstanceToken
+import io.github.takusan23.kaisendonmk2.BottomFragment.DialogBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.MenuBottomSheet
+import io.github.takusan23.kaisendonmk2.DataClass.AccountData
 import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
+import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
+import io.github.takusan23.kaisendonmk2.TimeLine.loadMultiAccount
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.fragment_timeline.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var prefSetting: SharedPreferences
+
+    lateinit var postInstanceToken: InstanceToken // Toot投稿用アカウント
+    var postVisibility = "public"   // 投稿する時に使う公開範囲
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,13 +44,6 @@ class MainActivity : AppCompatActivity() {
         supportActionBar?.hide()
 
         prefSetting = PreferenceManager.getDefaultSharedPreferences(this)
-
-        //  // ログイン情報ない
-        //  if (prefSetting.getString("instance", null) == null) {
-        //      val intent = Intent(this, LoginActivity::class.java)
-        //      startActivity(intent)
-        //      return
-        //  }
 
         // タイムラインFragment
         val fragment = TimeLineFragment()
@@ -78,14 +84,24 @@ class MainActivity : AppCompatActivity() {
 
     // 投稿領域を非表示
     fun hidePostCard() {
-        activity_main_post_card.visibility = View.GONE
         floatingActionButton.setImageDrawable(getDrawable(R.drawable.ic_create_black_24dp))
+        // アニメーション
+        val hideAnimation =
+            AnimationUtils.loadAnimation(this, R.anim.toot_card_hide_animation);
+        hideAnimation.interpolator = LinearOutSlowInInterpolator()
+        activity_main_post_card.startAnimation(hideAnimation)
+        activity_main_post_card.visibility = View.GONE
     }
 
     // 投稿領域を表示
     fun showPostCard() {
-        activity_main_post_card.visibility = View.VISIBLE
         floatingActionButton.setImageDrawable(getDrawable(R.drawable.ic_close_black_24dp))
+        // アニメーション
+        val showAnimation =
+            AnimationUtils.loadAnimation(this, R.anim.toot_card_show_animation);
+        showAnimation.interpolator = FastOutSlowInInterpolator()
+        activity_main_post_card.startAnimation(showAnimation)
+        activity_main_post_card.visibility = View.VISIBLE
     }
 
     // TimeLineFragment取得
@@ -93,6 +109,28 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.findFragmentById(R.id.activity_main_fragment) as TimeLineFragment
 
     private fun initPostCard() {
+        // 公開範囲
+        postVisibility = StatusAPI.VISIBILITY_PUBLIC
+        val visibilityButtons = arrayListOf<DialogBottomSheet.DialogBottomSheetItem>().apply {
+            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_public), R.drawable.ic_public_black_24dp))
+            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_unlisted), R.drawable.ic_train_black_24dp))
+            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_private), R.drawable.ic_home_black_24dp))
+            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_direct), R.drawable.ic_alternate_email_black_24dp))
+        }
+        activity_main_toot_visibility.setOnClickListener {
+            DialogBottomSheet(getString(R.string.visibility), visibilityButtons) { i, bottomSheetDialogFragment ->
+                postVisibility = when (i) {
+                    0 -> StatusAPI.VISIBILITY_PUBLIC
+                    1 -> StatusAPI.VISIBILITY_UNLISTED
+                    2 -> StatusAPI.VISIBILITY_PRIVATE
+                    3 -> StatusAPI.VISIBILITY_DIRECT
+                    else -> StatusAPI.VISIBILITY_DIRECT
+                }
+                activity_main_toot_visibility.setImageDrawable(getDrawable(visibilityButtons[i].icon))
+            }.show(supportFragmentManager, "visibility")
+        }
+        // アカウント切り替え
+        initMultiAccountBottomSheet()
         // 投稿ボタン
         activity_main_post.setOnClickListener {
             // 本当に投稿しても良い？
@@ -103,8 +141,8 @@ class MainActivity : AppCompatActivity() {
                 GlobalScope.launch(Dispatchers.Main) {
                     // UIスレッドのコルーチン -> メUIスレッドではないスレッドへ切り替え
                     val response = withContext(Dispatchers.IO) {
-                        val statusAPI = StatusAPI(getInstanceToken(this@MainActivity))
-                        statusAPI.postStatus(statusText, StatusAPI.VISIBILITY_DIRECT).await()
+                        val statusAPI = StatusAPI(postInstanceToken)
+                        statusAPI.postStatus(statusText, postVisibility).await()
                     }
                     // 帰ってきたらUIスレッドに戻る
                     if (response.isSuccessful) {
@@ -112,11 +150,57 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         showSnackBar(getString(R.string.post_error))
                     }
+                    activity_main_text_input.setText("")
                     // Card非表示
                     hidePostCard()
                 }
             }
         }
+    }
+
+    private fun initMultiAccountBottomSheet() {
+        GlobalScope.launch(Dispatchers.Main) {
+            // アカウント情報取得
+            var multiAccountProfileList = arrayListOf<AccountData>()
+            val accountList = withContext(Dispatchers.IO) {
+                multiAccountProfileList = loadAccount().await()
+                // アカウント切り替えのためのリスト
+                multiAccountProfileList.map { accountData ->
+                    DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} | ${accountData.instanceToken.instance}")
+                } as ArrayList<DialogBottomSheet.DialogBottomSheetItem>
+            }
+
+            // アカウントセット
+            fun setAccount(position: Int) {
+                postInstanceToken = multiAccountProfileList[position].instanceToken
+                Glide.with(activity_main_toot_account_avatar)
+                    .load(multiAccountProfileList[position].avatarStatic)
+                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                    .into(activity_main_toot_account_avatar)
+                activity_main_toot_account_name.text = accountList[position].title
+            }
+            // デフォ
+            setAccount(0)
+            // 押したら表示
+            activity_main_toot_account.setOnClickListener {
+                DialogBottomSheet(getString(R.string.account_switching), accountList) { i, bottomSheetDialogFragment ->
+                    // 選んだとき
+                    setAccount(i)
+                }.show(supportFragmentManager, "account")
+            }
+        }
+    }
+
+    // アカウント読み込む
+    private fun loadAccount(): Deferred<ArrayList<AccountData>> = GlobalScope.async {
+        val list = arrayListOf<AccountData>()
+        loadMultiAccount(this@MainActivity).forEach {
+            val accountAPI = AccountAPI(it)
+            val timeLineParser = TimeLineParser()
+            val myAccount = accountAPI.getVerifyCredentials().await()
+            list.add(timeLineParser.parseAccount(myAccount.body?.string()!!, it))
+        }
+        return@async list
     }
 
     /**

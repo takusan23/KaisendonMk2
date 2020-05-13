@@ -175,31 +175,12 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         }
 
         val text = """
-                投稿日時：${status.createdAt.toTimeFormat()}
-                トゥートID：${status.id}
+                投稿日時：
+                ${status.createdAt.toTimeFormat()}
+                トゥートID：
+                ${status.id}
             """.trimIndent()
         infoTextView.text = text
-    }
-
-    // ふぁぼ/ブーストした後など値を反映させる
-    private fun setFavBoostIcon(viewHolder: TootViewHolder, status: StatusData) {
-        viewHolder.apply {
-            val context = favoutiteButton.context
-            // ファボ数
-            favoutiteButton.text = status.favouritesCount.toString()
-            boostButton.text = status.boostCount.toString()
-            // ファボ済みならチェックマークに
-            (favoutiteButton as MaterialButton).icon = if (status.isFavourited) {
-                context.getDrawable(R.drawable.ic_done_black_24dp)
-            } else {
-                context.getDrawable(R.drawable.ic_star_border_black_24dp)
-            }
-            (boostButton as MaterialButton).icon = if (status.isBoosted) {
-                context.getDrawable(R.drawable.ic_done_black_24dp)
-            } else {
-                context.getDrawable(R.drawable.ic_repeat_black_24dp)
-            }
-        }
     }
 
     /**
