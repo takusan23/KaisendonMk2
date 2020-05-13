@@ -16,6 +16,19 @@
             android:layout_margin="5dp"
             android:orientation="vertical">
 
+            <TextView
+                android:id="@+id/adapter_timeline_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:padding="5dp"
+                android:text="タイムラインの名前" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#757575" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -35,7 +48,7 @@
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/adapter_timeline_name"
+                        android:id="@+id/adapter_timeline_user_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:textStyle="bold" />
@@ -64,37 +77,62 @@
                     android:layout_height="wrap_content" />
             </LinearLayout>
 
-            <LinearLayout
+            <TextView
+                android:id="@+id/adapter_timeline_info_textview"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/adapter_timeline_favourite"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:text="0"
+                        app:icon="@drawable/ic_star_border_black_24dp" />
+
+                    <Button
+                        android:id="@+id/adapter_timeline_boost"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:text="0"
+                        app:icon="@drawable/ic_repeat_black_24dp" />
+
+                </LinearLayout>
 
                 <Button
-                    android:id="@+id/adapter_timeline_favourite"
+                    android:id="@+id/adapter_timeline_more"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="end"
                     android:clickable="true"
                     android:focusable="true"
                     android:minWidth="0dp"
                     android:minHeight="0dp"
-                    android:text="0"
-                    app:icon="@drawable/ic_star_border_black_24dp" />
-
-                <Button
-                    android:id="@+id/adapter_timeline_boost"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:text="0"
-                    app:icon="@drawable/ic_repeat_black_24dp" />
-            </LinearLayout>
+                    app:icon="@drawable/ic_expand_more_black_24dp" />
+            </FrameLayout>
 
 
         </LinearLayout>
+
     </androidx.cardview.widget.CardView>
 </LinearLayout>

@@ -25,4 +25,8 @@
     <string name="delete_timeline">Can I delete the timeline?</string>
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
+    <string name="notification_favourite">favorite</string>
+    <string name="notification_mention">Mention</string>
+    <string name="notification_reblog">Boost</string>
+    <string name="notification_follow">Follow</string>
 </resources>

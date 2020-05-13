@@ -26,4 +26,8 @@
     <string name="delete_timeline">タイムライン削除してもいいですか？</string>
     <string name="delete">削除</string>
     <string name="cancel">キャンセル</string>
+    <string name="notification_favourite">お気に入り</string>
+    <string name="notification_mention">メンション</string>
+    <string name="notification_reblog">ブースト</string>
+    <string name="notification_follow">フォロー</string>
 </resources>
