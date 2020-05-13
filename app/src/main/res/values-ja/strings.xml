@@ -38,4 +38,5 @@
     <string name="visibility">公開範囲</string>
     <string name="account">アカウント</string>
     <string name="account_switching">アカウント切り替え</string>
+    <string name="timeline_item_size">取得数</string>
 </resources>

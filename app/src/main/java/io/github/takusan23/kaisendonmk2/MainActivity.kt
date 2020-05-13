@@ -1,6 +1,7 @@
 package io.github.takusan23.kaisendonmk2
 
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -23,7 +24,9 @@ import io.github.takusan23.kaisendonmk2.BottomFragment.MenuBottomSheet
 import io.github.takusan23.kaisendonmk2.DataClass.AccountData
 import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
+import io.github.takusan23.kaisendonmk2.TimeLine.isDarkMode
 import io.github.takusan23.kaisendonmk2.TimeLine.loadMultiAccount
+import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.fragment_timeline.*
@@ -38,6 +41,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (isDarkMode(this)) {
+            // ダークモード
+            setTheme(R.style.OLEDTheme)
+        } else {
+            // そうじゃないとき
+            setTheme(R.style.AppTheme)
+        }
+
         setContentView(R.layout.activity_main)
 
         // 初期化
@@ -166,12 +178,13 @@ class MainActivity : AppCompatActivity() {
                 multiAccountProfileList = loadAccount().await()
                 // アカウント切り替えのためのリスト
                 multiAccountProfileList.map { accountData ->
-                    DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} | ${accountData.instanceToken.instance}")
+                    DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} @${accountData.acct} | ${accountData.instanceToken.instance}")
                 } as ArrayList<DialogBottomSheet.DialogBottomSheetItem>
             }
 
             // アカウントセット
             fun setAccount(position: Int) {
+                activity_main_toot_account_avatar.setNullTint()
                 postInstanceToken = multiAccountProfileList[position].instanceToken
                 Glide.with(activity_main_toot_account_avatar)
                     .load(multiAccountProfileList[position].avatarStatic)

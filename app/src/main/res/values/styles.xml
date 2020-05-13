@@ -8,4 +8,30 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!--OLEDテーマ-->
+    <style name="OLEDTheme" parent="Theme.MaterialComponents">
+        <item name="colorAccent">@color/colorPrimaryDark</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="android:tint">#ffffff</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="materialButtonStyle">@style/ButtonStyle</item>
+        <item name="materialButtonOutlinedStyle">@style/OutlineButtonStyle</item>
+        <!-- DrawableStartの色とPadding -->
+        <item name="drawableTint">#ffffff</item>
+        <item name="android:drawablePadding">5sp</item>
+    </style>
+
+    <!--ボタンのテキスト色-->
+    <style name="ButtonStyle" parent="@style/Widget.MaterialComponents.Button">
+        <item name="android:textColor">#ffffff</item>
+        <item name="iconTint">#ffffff</item>
+    </style>
+
+    <style name="OutlineButtonStyle" parent="@style/Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">#ffffff</item>
+        <item name="iconTint">#ffffff</item>
+        <item name="backgroundTint">#ffffff</item>
+    </style>
+
 </resources>

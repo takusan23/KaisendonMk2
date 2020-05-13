@@ -45,14 +45,18 @@ class TimeLineFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // RecyclerView初期化
-        initRecyclerView()
+        if (isAdded) {
 
-        initAllTimeLine()
-        initAllTimeLineStreaming()
+            // RecyclerView初期化
+            initRecyclerView()
 
-        fragment_timeline_swipe.setOnRefreshListener {
             initAllTimeLine()
+            initAllTimeLineStreaming()
+
+            fragment_timeline_swipe.setOnRefreshListener {
+                initAllTimeLine()
+            }
+
         }
 
     }
@@ -66,7 +70,7 @@ class TimeLineFragment : Fragment() {
             withContext(Dispatchers.Main) {
                 timeLineItemDataList.clear()
                 timeLineAdapter.notifyDataSetChanged()
-                fragment_timeline_swipe.isRefreshing = true
+                fragment_timeline_swipe?.isRefreshing = true
             }
             // 読み込む
             val allTimeLineJSON = AllTimeLineJSON(context)
@@ -101,9 +105,11 @@ class TimeLineFragment : Fragment() {
             } as ArrayList<TimeLineItemData>
             // UI反映
             withContext(Dispatchers.Main) {
-                fragment_timeline_swipe.isRefreshing = false
+                fragment_timeline_swipe?.isRefreshing = false
                 initRecyclerView()
-                mainActivity.showSnackBar("取得数：${timeLineItemDataList.size}")
+                if (::mainActivity.isInitialized) {
+                    mainActivity.showSnackBar("${getString(R.string.timeline_item_size)}：${timeLineItemDataList.size}")
+                }
             }
         }
     }
@@ -147,28 +153,32 @@ class TimeLineFragment : Fragment() {
         if (timeLineItemDataList.find { it.statusData?.id == timeLineItemData.statusData?.id } == null) {
             // すでに追加済みなら
             GlobalScope.launch(Dispatchers.Main) {
-                // 一番上にいれば一番上に追従する時に必要な値
-                val intArray = IntArray(2)
-                val pos =
-                    (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).findFirstVisibleItemPositions(intArray)
-                // タイムライン追加
-                timeLineItemDataList.add(0, timeLineItemData)
-                timeLineAdapter.notifyItemInserted(0)
-                if (pos[0] == 0 || pos[1] == 0) {
-                    // 一番上にいれば一番上に追従する
-                    (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).scrollToPosition(0)
+                if (fragment_timeline_recyclerview?.layoutManager is StaggeredGridLayoutManager) {
+                    // 一番上にいれば一番上に追従する時に必要な値
+                    val intArray = IntArray(2)
+                    val pos =
+                        (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).findFirstVisibleItemPositions(intArray)
+                    // タイムライン追加
+                    timeLineItemDataList.add(0, timeLineItemData)
+                    timeLineAdapter.notifyItemInserted(0)
+                    if (pos[0] == 0 || pos[1] == 0) {
+                        // 一番上にいれば一番上に追従する
+                        (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).scrollToPosition(0)
+                    }
                 }
             }
         }
     }
 
     private fun initRecyclerView() {
-        fragment_timeline_recyclerview.apply {
+        fragment_timeline_recyclerview?.apply {
             setHasFixedSize(true)
             // なんかかっこいいやつ
             layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
             timeLineAdapter = TimelineRecyclerViewAdapter(timeLineItemDataList)
-            timeLineAdapter.mainActivity = mainActivity
+            if (::mainActivity.isInitialized) {
+                timeLineAdapter.mainActivity = mainActivity
+            }
             adapter = timeLineAdapter
         }
     }
