@@ -136,7 +136,7 @@ class TimeLineParser {
     }
 
     // emoji をパースする
-    private fun parseEmoji(jsonArray: JSONArray?): ArrayList<EmojiData> {
+    fun parseEmoji(jsonArray: JSONArray?): ArrayList<EmojiData> {
         val list = arrayListOf<EmojiData>()
         if (jsonArray == null) {
             return list

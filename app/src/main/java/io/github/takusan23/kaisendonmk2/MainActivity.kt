@@ -15,13 +15,11 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.snackbar.Snackbar
-import io.github.takusan23.kaisendonmk2.API.AccountAPI
-import io.github.takusan23.kaisendonmk2.API.InstanceToken
-import io.github.takusan23.kaisendonmk2.API.StatusAPI
-import io.github.takusan23.kaisendonmk2.API.getInstanceToken
+import io.github.takusan23.kaisendonmk2.API.*
 import io.github.takusan23.kaisendonmk2.BottomFragment.DialogBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.MenuBottomSheet
 import io.github.takusan23.kaisendonmk2.DataClass.AccountData
+import io.github.takusan23.kaisendonmk2.DataClass.EmojiData
 import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
 import io.github.takusan23.kaisendonmk2.TimeLine.isDarkMode
@@ -141,8 +139,12 @@ class MainActivity : AppCompatActivity() {
                 activity_main_toot_visibility.setImageDrawable(getDrawable(visibilityButtons[i].icon))
             }.show(supportFragmentManager, "visibility")
         }
-        // アカウント切り替え
-        initMultiAccountBottomSheet()
+        GlobalScope.launch {
+            // アカウント切り替え
+            initMultiAccountBottomSheet().await()
+            // えもじ
+            initEmoji().await()
+        }
         // 投稿ボタン
         activity_main_post.setOnClickListener {
             // 本当に投稿しても良い？
@@ -170,39 +172,66 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initMultiAccountBottomSheet() {
-        GlobalScope.launch(Dispatchers.Main) {
-            // アカウント情報取得
-            var multiAccountProfileList = arrayListOf<AccountData>()
-            val accountList = withContext(Dispatchers.IO) {
-                multiAccountProfileList = loadAccount().await()
-                // アカウント切り替えのためのリスト
-                multiAccountProfileList.map { accountData ->
-                    DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} @${accountData.acct} | ${accountData.instanceToken.instance}", -1, -1, accountData.avatarStatic)
-                } as ArrayList<DialogBottomSheet.DialogBottomSheetItem>
-            }
-
-            // アカウントセット
-            fun setAccount(position: Int) {
-                activity_main_toot_account_avatar.setNullTint()
-                postInstanceToken = multiAccountProfileList[position].instanceToken
-                Glide.with(activity_main_toot_account_avatar)
-                    .load(multiAccountProfileList[position].avatarStatic)
-                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                    .into(activity_main_toot_account_avatar)
-                activity_main_toot_account_name.text = accountList[position].title
-            }
-            // デフォ
-            setAccount(0)
-            // 押したら表示
-            activity_main_toot_account.setOnClickListener {
-                DialogBottomSheet(getString(R.string.account_switching), accountList) { i, bottomSheetDialogFragment ->
-                    // 選んだとき
-                    setAccount(i)
-                }.show(supportFragmentManager, "account")
-            }
+    /**
+     * カスタム絵文字読み込み関数
+     * アカウント切り替えしたら呼んでね
+     * */
+    private fun initEmoji() = GlobalScope.async(Dispatchers.Main) {
+        // データ取得
+        val emojiDataList = withContext(Dispatchers.IO) {
+            val emojiAPI = CustomEmojiAPI(postInstanceToken)
+            val response = emojiAPI.getCustomEmoji().await()
+            emojiAPI.parseCustomEmoji(response.body?.string()!!)
+        }
+        // DialogBottomSheet
+        val message = getString(R.string.custom_emoji)
+        val items = emojiDataList.map { emojiData ->
+            DialogBottomSheet.DialogBottomSheetItem(emojiData.shortCode, -1, -1, emojiData.url)
+        }
+        // 押したら追加
+        activity_main_toot_emoji.setOnClickListener {
+            DialogBottomSheet(message, items as ArrayList<DialogBottomSheet.DialogBottomSheetItem>) { i, bottomSheetDialogFragment ->
+                activity_main_text_input.append(" :${items[i].title}:")
+            }.show(supportFragmentManager, "custom_emoji")
         }
     }
+
+
+    private fun initMultiAccountBottomSheet() = GlobalScope.async(Dispatchers.Main) {
+        // アカウント情報取得
+        var multiAccountProfileList = arrayListOf<AccountData>()
+        val accountList = withContext(Dispatchers.IO) {
+            multiAccountProfileList = loadAccount().await()
+            // アカウント切り替えのためのリスト
+            multiAccountProfileList.map { accountData ->
+                DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} @${accountData.acct} | ${accountData.instanceToken.instance}", -1, -1, accountData.avatarStatic)
+            } as ArrayList<DialogBottomSheet.DialogBottomSheetItem>
+        }
+
+        // アカウントセット
+        fun setAccount(position: Int) = GlobalScope.async(Dispatchers.Main) {
+            activity_main_toot_account_avatar.setNullTint()
+            postInstanceToken = multiAccountProfileList[position].instanceToken
+            Glide.with(activity_main_toot_account_avatar)
+                .load(multiAccountProfileList[position].avatarStatic)
+                .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                .into(activity_main_toot_account_avatar)
+            activity_main_toot_account_name.text = accountList[position].title
+            initEmoji().await()
+        }
+        // デフォ
+        setAccount(0).await()
+        // 押したら表示
+        activity_main_toot_account.setOnClickListener {
+            DialogBottomSheet(getString(R.string.account_switching), accountList) { i, bottomSheetDialogFragment ->
+                GlobalScope.launch {
+                    // 選んだとき
+                    setAccount(i).await()
+                }
+            }.show(supportFragmentManager, "account")
+        }
+    }
+
 
     // アカウント読み込む
     private fun loadAccount(): Deferred<ArrayList<AccountData>> = GlobalScope.async {

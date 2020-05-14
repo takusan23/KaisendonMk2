@@ -38,4 +38,5 @@
     <string name="account">Account</string>
     <string name="account_switching">Account switching</string>
     <string name="timeline_item_size">Number of acquisitions</string>
+    <string name="custom_emoji">Custom emoji</string>
 </resources>

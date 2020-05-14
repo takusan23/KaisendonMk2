@@ -96,6 +96,16 @@
                     android:padding="10dp"
                     app:srcCompat="@drawable/ic_public_black_24dp" />
 
+                <ImageView
+                    android:id="@+id/activity_main_toot_emoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground"
+                    android:padding="10dp"
+                    app:srcCompat="@drawable/ic_insert_emoticon_black_24dp" />
+
             </LinearLayout>
 
             <LinearLayout
