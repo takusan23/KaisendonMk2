@@ -178,7 +178,7 @@ class MainActivity : AppCompatActivity() {
                 multiAccountProfileList = loadAccount().await()
                 // アカウント切り替えのためのリスト
                 multiAccountProfileList.map { accountData ->
-                    DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} @${accountData.acct} | ${accountData.instanceToken.instance}")
+                    DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} @${accountData.acct} | ${accountData.instanceToken.instance}", -1, -1, accountData.avatarStatic)
                 } as ArrayList<DialogBottomSheet.DialogBottomSheetItem>
             }
 

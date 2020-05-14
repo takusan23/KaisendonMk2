@@ -8,11 +8,17 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.github.takusan23.kaisendonmk2.R
+import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import kotlinx.android.synthetic.main.bottom_fragment_dialog.*
 import kotlinx.coroutines.GlobalScope
+import org.w3c.dom.Text
 
 /**
  * BottomSheet版ダイアログを自作してみた。
@@ -36,29 +42,46 @@ class DialogBottomSheet(val description: String, val buttonItems: ArrayList<Dial
             val item = buttonItems[position]
             // 押したときのRippleつけたいがためにinflateしてる
             val layout = layoutInflater.inflate(R.layout.textview_ripple, null)
-            val textView = (layout as TextView).apply {
-                text = item.title
-                if (item.icon != -1) {
-                    setCompoundDrawablesWithIntrinsicBounds(context?.getDrawable(item.icon), null, null, null)
+            // テキスト
+            val textView = layout.findViewById<TextView>(R.id.dialog_layout_textview)
+            textView.text = item.title
+            if (item.textColor != -1) {
+                textView.setTextColor(item.textColor)
+            }
+            // 画像
+            val imageView = layout.findViewById<ImageView>(R.id.dialog_layout_imageview)
+            imageView.setNullTint()
+            when {
+                item.icon != -1 -> {
+                    // drawableから
+                    imageView.setImageDrawable(context?.getDrawable(item.icon))
                 }
-                if (item.textColor != -1) {
-                    setTextColor(item.textColor)
+                item.imageUrl != "" -> {
+                    // オンライン上から
+                    Glide.with(imageView)
+                        .load(item.imageUrl)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(imageView)
+                }
+                item.textColor != -1 -> {
+                    // いろ
+                    textView.setTextColor(item.textColor)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        compoundDrawableTintList = ColorStateList.valueOf(item.textColor)
+                        imageView.imageTintList = ColorStateList.valueOf(item.textColor)
                     }
                 }
-                setOnClickListener {
-                    // 高階関数
-                    clickEvent(position, this@DialogBottomSheet)
-                    // 閉じる
-                    dismiss()
-                }
             }
-            bottom_fragment_dialog_linearlayout.addView(textView)
+            layout.setOnClickListener {
+                // 高階関数
+                clickEvent(position, this@DialogBottomSheet)
+                // 閉じる
+                dismiss()
+            }
+            bottom_fragment_dialog_linearlayout.addView(layout)
         }
     }
 
-    // ボタンのテキスト、アイコンなど。IconとtextColorは無指定では-1（設定しない）になります。
-    data class DialogBottomSheetItem(val title: String, val icon: Int = -1, val textColor: Int = -1)
+    // ボタンのテキスト、アイコンなど。IconとtextColorは無指定では-1（設定しない）になります。imageUrlは画像URLを入れると表示します
+    data class DialogBottomSheetItem(val title: String, val icon: Int = -1, val textColor: Int = -1, val imageUrl: String = "")
 
 }

@@ -168,7 +168,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     private fun setCardViewStyle(cardView: CardView) {
         (cardView as MaterialCardView).apply {
             setStrokeColor(ColorStateList.valueOf(Color.parseColor("#757575")))
-            strokeWidth = 5
+            strokeWidth = 2
             if (isDarkMode(context)) {
                 setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#000000")))
             } else {
@@ -242,7 +242,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                             statusAPI.postDeleteStatusBoost(status.id, status.instanceToken).await()
                         }
                     }
-                    if (!response.isSuccessful) {
+                    if (response.isSuccessful) {
                         mainActivity.showSnackBar("${context.getString(R.string.boost_ok)}：${status.id}")
                         // 反転
                         status.isBoosted = !status.isBoosted
