@@ -1,7 +1,7 @@
 package io.github.takusan23.kaisendonmk2.TimeLine
 
 import android.content.Context
-import io.github.takusan23.kaisendonmk2.API.InstanceToken
+import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
 import io.github.takusan23.kaisendonmk2.DataClass.AllTimeLineData
 import org.json.JSONArray
 import org.json.JSONObject

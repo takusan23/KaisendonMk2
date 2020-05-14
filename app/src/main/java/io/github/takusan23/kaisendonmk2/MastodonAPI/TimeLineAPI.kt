@@ -1,4 +1,4 @@
-package io.github.takusan23.kaisendonmk2.API
+package io.github.takusan23.kaisendonmk2.MastodonAPI
 
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope

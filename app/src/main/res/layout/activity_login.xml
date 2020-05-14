@@ -8,6 +8,13 @@
     android:orientation="vertical"
     tools:context=".Activity.LoginActivity">
 
+    <Switch
+        android:id="@+id/activity_login_misskey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="@string/misskey_login" />
+
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"

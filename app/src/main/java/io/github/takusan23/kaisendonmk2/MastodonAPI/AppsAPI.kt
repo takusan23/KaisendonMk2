@@ -1,4 +1,4 @@
-package io.github.takusan23.kaisendonmk2.API
+package io.github.takusan23.kaisendonmk2.MastodonAPI
 
 import io.github.takusan23.kaisendonmk2.DataClass.AppData
 import kotlinx.coroutines.Deferred
@@ -8,7 +8,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import org.json.JSONObject
 
 /**

@@ -39,4 +39,16 @@
     <string name="account_switching">Account switching</string>
     <string name="timeline_item_size">Number of acquisitions</string>
     <string name="custom_emoji">Custom emoji</string>
+    <string name="home">Home</string>
+    <string name="notification">Notification</string>
+    <string name="misskey_login">Login to Misskey</string>
+    <string name="renoted">Renote</string>
+    <string name="renote_message">Can I renote?</string>
+    <string name="reaction">reaction</string>
+    <string name="reaction_ok">Reacted</string>
+    <string name="misskey_visibility_public">Public</string>
+    <string name="misskey_visibility_home">Home</string>
+    <string name="misskey_visibility_followers">Followers</string>
+    <string name="misskey_visibility_specified">Specified</string>
+    <string name="misskey_visibility_private">Private</string>
 </resources>

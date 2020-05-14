@@ -1,6 +1,6 @@
 package io.github.takusan23.kaisendonmk2.DataClass
 
-import io.github.takusan23.kaisendonmk2.API.InstanceToken
+import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
 
 /**
  * 表示するタイムラインデータクラス

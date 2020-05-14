@@ -1,7 +1,6 @@
 package io.github.takusan23.kaisendonmk2.StreamingAPI
 
-import androidx.core.net.toUri
-import io.github.takusan23.kaisendonmk2.API.InstanceToken
+import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
 import io.github.takusan23.kaisendonmk2.DataClass.NotificationData
 import io.github.takusan23.kaisendonmk2.DataClass.StatusData
 import io.github.takusan23.kaisendonmk2.JSONParse.NotificationParser

@@ -40,4 +40,16 @@
     <string name="account_switching">アカウント切り替え</string>
     <string name="timeline_item_size">取得数</string>
     <string name="custom_emoji">カスタム絵文字</string>
+    <string name="home">ホームTL</string>
+    <string name="notification">通知</string>
+    <string name="misskey_login">Misskeyにログイン</string>
+    <string name="renoted">Renoteしました</string>
+    <string name="renote_message">Renoteしてもいい？</string>
+    <string name="reaction">リアクション</string>
+    <string name="reaction_ok">リアクションしました</string>
+    <string name="misskey_visibility_public">公開</string>
+    <string name="misskey_visibility_home">ホームのみ公開</string>
+    <string name="misskey_visibility_followers">フォロワーにのみ公開</string>
+    <string name="misskey_visibility_specified">ダイレクト</string>
+    <string name="misskey_visibility_private">プライベート</string>
 </resources>

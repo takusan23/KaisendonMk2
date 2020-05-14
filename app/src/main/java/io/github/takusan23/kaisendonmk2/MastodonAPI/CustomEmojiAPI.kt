@@ -1,9 +1,8 @@
-package io.github.takusan23.kaisendonmk2.API
+package io.github.takusan23.kaisendonmk2.MastodonAPI
 
 import io.github.takusan23.kaisendonmk2.DataClass.EmojiData
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import okhttp3.OkHttpClient

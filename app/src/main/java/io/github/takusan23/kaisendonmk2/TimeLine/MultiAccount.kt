@@ -2,7 +2,7 @@ package io.github.takusan23.kaisendonmk2.TimeLine
 
 import android.content.Context
 import androidx.preference.PreferenceManager
-import io.github.takusan23.kaisendonmk2.API.InstanceToken
+import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
 import org.json.JSONArray
 
 /**

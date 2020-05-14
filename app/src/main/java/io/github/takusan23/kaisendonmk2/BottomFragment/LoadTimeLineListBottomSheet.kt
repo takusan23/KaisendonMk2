@@ -58,4 +58,13 @@ class LoadTimeLineListBottomSheet : BottomSheetDialogFragment() {
             adapter = allTimeLineAdapter
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mainActivity.getTimeLineFragment().apply {
+            initAllTimeLine()
+            initAllTimeLineStreaming()
+        }
+    }
+
 }

@@ -6,9 +6,9 @@ import java.util.*
 /**
  * ISO8601形式をUnixTimeへ変換する
  * */
-internal fun toUnixTime(iso8601: String): Long {
+internal fun String.toUnixTime(): Long {
     val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    return simpleDateFormat.parse(iso8601).time / 1000
+    return simpleDateFormat.parse(this).time / 1000
 }
 
 /**

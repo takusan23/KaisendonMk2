@@ -1,4 +1,4 @@
-package io.github.takusan23.kaisendonmk2.API
+package io.github.takusan23.kaisendonmk2.MastodonAPI
 
 /**
  * インスタンス、アクセストークンを保持するクラス。将来的にマストドン以外も・・？

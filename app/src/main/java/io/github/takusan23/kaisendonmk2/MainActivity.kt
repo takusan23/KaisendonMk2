@@ -1,13 +1,14 @@
 package io.github.takusan23.kaisendonmk2
 
+import android.content.Intent
 import android.content.SharedPreferences
-import android.content.res.Configuration
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.animation.AnimationUtils
+import androidx.core.content.edit
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.preference.PreferenceManager
@@ -15,18 +16,26 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.snackbar.Snackbar
-import io.github.takusan23.kaisendonmk2.API.*
+import io.github.takusan23.kaisendonmk2.Activity.LoginActivity
+import io.github.takusan23.kaisendonmk2.MastodonAPI.*
 import io.github.takusan23.kaisendonmk2.BottomFragment.DialogBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.MenuBottomSheet
+import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
 import io.github.takusan23.kaisendonmk2.DataClass.AccountData
-import io.github.takusan23.kaisendonmk2.DataClass.EmojiData
+import io.github.takusan23.kaisendonmk2.DataClass.MultiAccountData
 import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
+import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
+import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyAccountAPI
+import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyEmojiAPI
+import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyNoteAPI
+import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyTimeLineAPI
+import io.github.takusan23.kaisendonmk2.StreamingAPI.MisskeyStreamingAPI
+import io.github.takusan23.kaisendonmk2.StreamingAPI.StreamingAPI
 import io.github.takusan23.kaisendonmk2.TimeLine.isDarkMode
 import io.github.takusan23.kaisendonmk2.TimeLine.loadMultiAccount
 import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.fragment_timeline.*
 import kotlinx.coroutines.*
 
@@ -55,6 +64,14 @@ class MainActivity : AppCompatActivity() {
 
         prefSetting = PreferenceManager.getDefaultSharedPreferences(this)
 
+        // ログイン情報ない
+        if (prefSetting.getString("account_json", null) == null) {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            return
+        }
+
+
         // タイムラインFragment
         val fragment = TimeLineFragment()
         fragment.mainActivity = this
@@ -68,6 +85,7 @@ class MainActivity : AppCompatActivity() {
 
         // 投稿部分初期化
         initPostCard()
+
 
     }
 
@@ -119,29 +137,11 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.findFragmentById(R.id.activity_main_fragment) as TimeLineFragment
 
     private fun initPostCard() {
-        // 公開範囲
-        postVisibility = StatusAPI.VISIBILITY_PUBLIC
-        val visibilityButtons = arrayListOf<DialogBottomSheet.DialogBottomSheetItem>().apply {
-            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_public), R.drawable.ic_public_black_24dp))
-            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_unlisted), R.drawable.ic_train_black_24dp))
-            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_private), R.drawable.ic_home_black_24dp))
-            add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_direct), R.drawable.ic_alternate_email_black_24dp))
-        }
-        activity_main_toot_visibility.setOnClickListener {
-            DialogBottomSheet(getString(R.string.visibility), visibilityButtons) { i, bottomSheetDialogFragment ->
-                postVisibility = when (i) {
-                    0 -> StatusAPI.VISIBILITY_PUBLIC
-                    1 -> StatusAPI.VISIBILITY_UNLISTED
-                    2 -> StatusAPI.VISIBILITY_PRIVATE
-                    3 -> StatusAPI.VISIBILITY_DIRECT
-                    else -> StatusAPI.VISIBILITY_DIRECT
-                }
-                activity_main_toot_visibility.setImageDrawable(getDrawable(visibilityButtons[i].icon))
-            }.show(supportFragmentManager, "visibility")
-        }
         GlobalScope.launch {
             // アカウント切り替え
             initMultiAccountBottomSheet().await()
+            // 公開範囲
+            initVisibility()
             // えもじ
             initEmoji().await()
         }
@@ -155,9 +155,15 @@ class MainActivity : AppCompatActivity() {
                 GlobalScope.launch(Dispatchers.Main) {
                     // UIスレッドのコルーチン -> メUIスレッドではないスレッドへ切り替え
                     val response = withContext(Dispatchers.IO) {
-                        val statusAPI = StatusAPI(postInstanceToken)
-                        statusAPI.postStatus(statusText, postVisibility).await()
+                        if (postInstanceToken.service == "mastodon") {
+                            val statusAPI = StatusAPI(postInstanceToken)
+                            statusAPI.postStatus(statusText, postVisibility).await()
+                        } else {
+                            val noteAPI = MisskeyNoteAPI(postInstanceToken)
+                            noteAPI.notesCreate(statusText, postVisibility).await()
+                        }
                     }
+                    println(response.body?.string())
                     // 帰ってきたらUIスレッドに戻る
                     if (response.isSuccessful) {
                         showSnackBar(getString(R.string.post_ok))
@@ -172,6 +178,52 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initVisibility() {
+        // 公開範囲
+        postVisibility = if (postInstanceToken.service == "mastodon") {
+            StatusAPI.VISIBILITY_PUBLIC
+        } else {
+            MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC
+        }
+        activity_main_toot_visibility.setOnClickListener {
+            val visibilityButtons = arrayListOf<DialogBottomSheet.DialogBottomSheetItem>().apply {
+                if (postInstanceToken.service == "mastodon") {
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_public), R.drawable.ic_public_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_unlisted), R.drawable.ic_train_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_private), R.drawable.ic_home_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.visibility_direct), R.drawable.ic_alternate_email_black_24dp))
+                } else {
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_public), R.drawable.ic_public_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_home), R.drawable.ic_train_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_followers), R.drawable.ic_home_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_specified), R.drawable.ic_alternate_email_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_private), R.drawable.ic_account_box_black_24dp))
+                }
+            }
+            DialogBottomSheet(getString(R.string.visibility), visibilityButtons) { i, bottomSheetDialogFragment ->
+                postVisibility = if (postInstanceToken.service == "mastodon") {
+                    when (i) {
+                        0 -> StatusAPI.VISIBILITY_PUBLIC
+                        1 -> StatusAPI.VISIBILITY_UNLISTED
+                        2 -> StatusAPI.VISIBILITY_PRIVATE
+                        3 -> StatusAPI.VISIBILITY_DIRECT
+                        else -> StatusAPI.VISIBILITY_DIRECT
+                    }
+                } else {
+                    when (i) {
+                        0 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC
+                        1 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_HOME
+                        2 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_FOLLOWERS
+                        3 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_SPECIFIED
+                        4 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_PRIVATE
+                        else -> MisskeyNoteAPI.MISSKEY_VISIBILITY_SPECIFIED
+                    }
+                }
+                activity_main_toot_visibility.setImageDrawable(getDrawable(visibilityButtons[i].icon))
+            }.show(supportFragmentManager, "visibility")
+        }
+    }
+
     /**
      * カスタム絵文字読み込み関数
      * アカウント切り替えしたら呼んでね
@@ -180,8 +232,14 @@ class MainActivity : AppCompatActivity() {
         // データ取得
         val emojiDataList = withContext(Dispatchers.IO) {
             val emojiAPI = CustomEmojiAPI(postInstanceToken)
-            val response = emojiAPI.getCustomEmoji().await()
-            emojiAPI.parseCustomEmoji(response.body?.string()!!)
+            val misskeyEmojiAPI = MisskeyEmojiAPI(postInstanceToken)
+            val misskeyParser = MisskeyParser()
+            // カスタム絵文字取得
+            if (postInstanceToken.service == "mastodon") {
+                emojiAPI.parseCustomEmoji(emojiAPI.getCustomEmoji().await().body?.string()!!)
+            } else {
+                misskeyParser.parseEmoji(misskeyEmojiAPI.getMisskeyEmoji().await().body?.string()!!)
+            }
         }
         // DialogBottomSheet
         val message = getString(R.string.custom_emoji)
@@ -199,30 +257,52 @@ class MainActivity : AppCompatActivity() {
 
     private fun initMultiAccountBottomSheet() = GlobalScope.async(Dispatchers.Main) {
         // アカウント情報取得
-        var multiAccountProfileList = arrayListOf<AccountData>()
+        var multiAccountProfileList = arrayListOf<MultiAccountData>()
+        // DialogBottomSheetに入れる値
         val accountList = withContext(Dispatchers.IO) {
             multiAccountProfileList = loadAccount().await()
             // アカウント切り替えのためのリスト
             multiAccountProfileList.map { accountData ->
-                DialogBottomSheet.DialogBottomSheetItem("${accountData.displayName} @${accountData.acct} | ${accountData.instanceToken.instance}", -1, -1, accountData.avatarStatic)
+                if (accountData.accountData != null) {
+                    DialogBottomSheet.DialogBottomSheetItem("${accountData.accountData.displayName} @${accountData.accountData.acct} | ${accountData.accountData.instanceToken.instance}", -1, -1, accountData.accountData.avatarStatic)
+                } else {
+                    DialogBottomSheet.DialogBottomSheetItem("${accountData.misskeyUserData!!.name} @${accountData.misskeyUserData.username} | ${accountData.misskeyUserData.instanceToken.instance}", -1, -1, accountData.misskeyUserData.avatarUrl)
+                }
             } as ArrayList<DialogBottomSheet.DialogBottomSheetItem>
         }
 
         // アカウントセット
         fun setAccount(position: Int) = GlobalScope.async(Dispatchers.Main) {
             activity_main_toot_account_avatar.setNullTint()
-            postInstanceToken = multiAccountProfileList[position].instanceToken
+            postInstanceToken = multiAccountProfileList[position].accountData?.instanceToken
+                ?: multiAccountProfileList[position].misskeyUserData!!.instanceToken
             Glide.with(activity_main_toot_account_avatar)
-                .load(multiAccountProfileList[position].avatarStatic)
+                .load(
+                    multiAccountProfileList[position].accountData?.avatarStatic
+                        ?: multiAccountProfileList[position].misskeyUserData!!.avatarUrl
+                )
                 .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
                 .into(activity_main_toot_account_avatar)
-            activity_main_toot_account_name.text = accountList[position].title
+            // カスタム絵文字 support
+            val customEmoji = CustomEmoji()
+            if (multiAccountProfileList[position].service == "mastodon") {
+                customEmoji.setCustomEmoji(activity_main_toot_account_name, accountList[position].title, multiAccountProfileList[position].accountData!!.allEmoji)
+            } else {
+                customEmoji.setCustomEmoji(activity_main_toot_account_name, accountList[position].title, multiAccountProfileList[position].misskeyUserData!!.emoji)
+            }
+            // 選択したアカウント覚えておく
+            prefSetting.edit { putString("last_use_account", accountList[position].title) }
             initEmoji().await()
         }
-        // デフォ
-        setAccount(0).await()
+        // 最後に使ったアカウントが記録されてるか
+        val lastUseAccount = prefSetting.getString("last_use_account", null)
+        if (lastUseAccount == null) {
+            setAccount(0).await() // 記録なし
+        } else {
+            setAccount(accountList.indexOfFirst { dialogBottomSheetItem -> dialogBottomSheetItem.title == lastUseAccount }).await() // 記録あり
+        }
         // 押したら表示
-        activity_main_toot_account.setOnClickListener {
+        activity_main_toot_account_name.setOnClickListener {
             DialogBottomSheet(getString(R.string.account_switching), accountList) { i, bottomSheetDialogFragment ->
                 GlobalScope.launch {
                     // 選んだとき
@@ -234,13 +314,21 @@ class MainActivity : AppCompatActivity() {
 
 
     // アカウント読み込む
-    private fun loadAccount(): Deferred<ArrayList<AccountData>> = GlobalScope.async {
-        val list = arrayListOf<AccountData>()
+    private fun loadAccount(): Deferred<ArrayList<MultiAccountData>> = GlobalScope.async {
+        val list = arrayListOf<MultiAccountData>()
         loadMultiAccount(this@MainActivity).forEach {
-            val accountAPI = AccountAPI(it)
-            val timeLineParser = TimeLineParser()
-            val myAccount = accountAPI.getVerifyCredentials().await()
-            list.add(timeLineParser.parseAccount(myAccount.body?.string()!!, it))
+            if (it.service == "mastodon") {
+                val accountAPI = AccountAPI(it)
+                val timeLineParser = TimeLineParser()
+                val myAccount = accountAPI.getVerifyCredentials().await()
+                list.add(MultiAccountData(it.service, timeLineParser.parseAccount(myAccount.body?.string()!!, it)))
+            } else {
+                val misskeyAccountAPI = MisskeyAccountAPI(it)
+                val misskeyParser = MisskeyParser()
+                val account = misskeyAccountAPI.getMyAccount().await()
+                val userData = misskeyParser.parseUser(account.body?.string()!!, it)
+                list.add(MultiAccountData(it.service, null, userData))
+            }
         }
         return@async list
     }

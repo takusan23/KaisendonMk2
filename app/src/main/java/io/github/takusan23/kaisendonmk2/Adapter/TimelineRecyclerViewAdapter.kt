@@ -9,20 +9,25 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import io.github.takusan23.kaisendonmk2.API.StatusAPI
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import io.github.takusan23.kaisendonmk2.BottomFragment.MisskeyReactionBottomSheet
+import io.github.takusan23.kaisendonmk2.MastodonAPI.StatusAPI
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
-import io.github.takusan23.kaisendonmk2.DataClass.EmojiData
 import io.github.takusan23.kaisendonmk2.DataClass.StatusData
 import io.github.takusan23.kaisendonmk2.DataClass.TimeLineItemData
+import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.MainActivity
+import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyNoteAPI
+import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
 import io.github.takusan23.kaisendonmk2.R
+import io.github.takusan23.kaisendonmk2.TimeLine.escapeToBrTag
 import io.github.takusan23.kaisendonmk2.TimeLine.isDarkMode
 import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import io.github.takusan23.kaisendonmk2.TimeLine.toTimeFormat
@@ -43,9 +48,23 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     // レイアウトの定数（onCreateViewHolder()で使う）
     companion object {
+        /** Mastodon トゥート */
         val TOOT_LAYOUT = 0
+
+        /** Mastodon 通知 */
         val NOTIFICATION_LAYOUT = 1
+
+        /** Mastodon ブースト */
         val TOOT_BOOST_LAYOUT = 2
+
+        /** Misskey 投稿 */
+        val MISSKEY_NOTE_LAYOUT = 3
+
+        /** Misskey 通知 */
+        val MISSKEY_NOTIFICATION_LAYOUT = 4
+
+        /** Misskey Renote */
+        val MISSKEY_RENOTE_LAYOUT = 5
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
@@ -54,6 +73,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
             TOOT_BOOST_LAYOUT -> BoostViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_boost, parent, false))
             TOOT_LAYOUT -> TootViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_timeline, parent, false))
             NOTIFICATION_LAYOUT -> NotificationViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_notification, parent, false))
+            MISSKEY_NOTE_LAYOUT -> MisskeyNoteViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_misskey_note, parent, false))
+            MISSKEY_NOTIFICATION_LAYOUT -> MisskeyNotificationViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_misskey_notification, parent, false))
+            MISSKEY_RENOTE_LAYOUT -> MisskeyRenoteViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_misskey_renote, parent, false))
             else -> TootViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.adapter_timeline, parent, false))
         }
         return view
@@ -62,104 +84,221 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // 通知と投稿で分岐させる
     override fun getItemViewType(position: Int): Int {
         return when {
+            // Mastodon
             timeLineItemDataList[position].statusData != null && timeLineItemDataList[position].statusData!!.reblogStatusData != null -> TOOT_BOOST_LAYOUT
             timeLineItemDataList[position].statusData != null -> TOOT_LAYOUT
             timeLineItemDataList[position].notificationData != null -> NOTIFICATION_LAYOUT
+            // Misskey
+            timeLineItemDataList[position].misskeyNoteData != null && timeLineItemDataList[position].misskeyNoteData!!.renote != null -> MISSKEY_RENOTE_LAYOUT
+            timeLineItemDataList[position].misskeyNoteData != null -> MISSKEY_NOTE_LAYOUT
+            timeLineItemDataList[position].misskeyNotificationData != null -> MISSKEY_NOTIFICATION_LAYOUT
             else -> TOOT_LAYOUT
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder is TootViewHolder) {
-            holder.apply {
-                // トゥート
-                val context = nameTextView.context
-                val status = timeLineItemDataList.get(position).statusData ?: return
-                // TL名
-                timeLineName.text = timeLineItemDataList.get(position).allTimeLineData.timeLineName
-                // トゥート表示
-                idTextView.text = "@${status.accountData.acct}"
-                customEmoji.setCustomEmoji(nameTextView, status.accountData.displayName, status.accountData.allEmoji)
-                customEmoji.setCustomEmoji(contentTextView, status.content, status.allEmoji)
-                avatarImageView.setNullTint()
-                Glide.with(avatarImageView)
-                    .load(status.accountData.avatarStatic)
-                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                    .into(avatarImageView)
-                // お気に入り、ブースト
-                initFav(favoutiteButton, status)
-                initBoost(boostButton, status)
-                applyButton(favoutiteButton, status.favouritesCount.toString(), status.isFavourited, R.drawable.ic_star_border_black_24dp)
-                applyButton(boostButton, status.boostCount.toString(), status.isBoosted, R.drawable.ic_repeat_black_24dp)
-                // 詳細表示
-                initInfo(moreButton, infoTextView, status)
-                // ダークモードなら
-                setCardViewStyle(cardView)
-            }
-        } else if (holder is NotificationViewHolder) {
-            holder.apply {
-                // 通知
-                val context = nameTextView.context
-                val notificationData = timeLineItemDataList.get(position).notificationData ?: return
-                // TL名
-                timeLineName.text = timeLineItemDataList.get(position).allTimeLineData.timeLineName
-                // 通知タイプ
-                notificationTextView.text = when (notificationData.type) {
-                    "favourite" -> context.getText(R.string.notification_favourite)
-                    "reblog" -> context.getText(R.string.notification_reblog)
-                    "mention" -> context.getText(R.string.notification_mention)
-                    "follow" -> context.getText(R.string.notification_follow)
-                    else -> context.getText(R.string.notification_favourite)
+        when {
+            holder is TootViewHolder -> {
+                holder.apply {
+                    // トゥート
+                    val context = nameTextView.context
+                    val status = timeLineItemDataList.get(position).statusData ?: return
+                    // TL名
+                    timeLineName.text =
+                        timeLineItemDataList.get(position).allTimeLineData.timeLineName
+                    // トゥート表示
+                    idTextView.text = "@${status.accountData.acct}"
+                    customEmoji.setCustomEmoji(nameTextView, status.accountData.displayName, status.accountData.allEmoji)
+                    customEmoji.setCustomEmoji(contentTextView, status.content, status.allEmoji)
+                    avatarImageView.setNullTint()
+                    Glide.with(avatarImageView)
+                        .load(status.accountData.avatarStatic)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(avatarImageView)
+                    // お気に入り、ブースト
+                    initFav(favoutiteButton, status)
+                    initBoost(boostButton, status)
+                    applyButton(favoutiteButton, status.favouritesCount.toString(), status.isFavourited, R.drawable.ic_star_border_black_24dp)
+                    applyButton(boostButton, status.boostCount.toString(), status.isBoosted, R.drawable.ic_repeat_black_24dp)
+                    // 詳細表示
+                    initInfo(moreButton, infoTextView, status)
+                    // ダークモードなら
+                    setCardViewStyle(cardView)
                 }
-                // アカウント情報
-                idTextView.text = "@${notificationData.accountData.acct}"
-                customEmoji.setCustomEmoji(nameTextView, notificationData.accountData.displayName, notificationData.accountData.allEmoji)
-                avatarImageView.setNullTint()
-                Glide.with(avatarImageView)
-                    .load(notificationData.accountData.avatarStatic)
-                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                    .into(avatarImageView)
-                // statusあればトゥート表示
-                if (notificationData.status != null) {
-                    customEmoji.setCustomEmoji(contentTextView, notificationData.status.content, notificationData.status.allEmoji)
-                }
-                // ダークモードなら
-                setCardViewStyle(cardView)
             }
-        } else if (holder is BoostViewHolder) {
-            holder.apply {
-                // トゥート
-                val context = nameTextView.context
-                val status = timeLineItemDataList.get(position).statusData ?: return
-                val reblogStatus = status.reblogStatusData ?: return
-                // TL名
-                timeLineName.text = timeLineItemDataList.get(position).allTimeLineData.timeLineName
-                // ブースト元トゥート表示
-                boostIDTextView.text = "@${reblogStatus.accountData.acct}"
-                customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.accountData.displayName, reblogStatus.accountData.allEmoji)
-                customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.content, reblogStatus.allEmoji)
-                boostAvatarImageView.setNullTint()
-                Glide.with(boostAvatarImageView)
-                    .load(reblogStatus.accountData.avatarStatic)
-                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                    .into(boostAvatarImageView)
-                // ブーストしたユーザーのアバター
-                idTextView.text = "@${status.accountData.acct}"
-                customEmoji.setCustomEmoji(nameTextView, "${status.accountData.displayName}<br>${context.getString(R.string.boosted)}", status.accountData.allEmoji)
-                avatarImageView.setNullTint()
-                Glide.with(avatarImageView)
-                    .load(status.accountData.avatarStatic)
-                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                    .into(avatarImageView)
-                // お気に入り、ブースト
-                initFav(favoutiteButton, status)
-                initBoost(boostButton, status)
-                applyButton(favoutiteButton, reblogStatus.favouritesCount.toString(), reblogStatus.isFavourited, R.drawable.ic_star_border_black_24dp)
-                applyButton(boostButton, reblogStatus.boostCount.toString(), reblogStatus.isBoosted, R.drawable.ic_repeat_black_24dp)
-                // 詳細表示
-                initInfo(moreButton, infoTextView, status)
-                // ダークモードなら
-                setCardViewStyle(cardView)
+            holder is NotificationViewHolder -> {
+                holder.apply {
+                    // 通知
+                    val context = nameTextView.context
+                    val notificationData =
+                        timeLineItemDataList.get(position).notificationData ?: return
+                    // TL名
+                    timeLineName.text =
+                        timeLineItemDataList.get(position).allTimeLineData.timeLineName
+                    // 通知タイプ
+                    notificationTextView.text = when (notificationData.type) {
+                        "favourite" -> context.getText(R.string.notification_favourite)
+                        "reblog" -> context.getText(R.string.notification_reblog)
+                        "mention" -> context.getText(R.string.notification_mention)
+                        "follow" -> context.getText(R.string.notification_follow)
+                        else -> context.getText(R.string.notification_favourite)
+                    }
+                    // アカウント情報
+                    idTextView.text = "@${notificationData.accountData.acct}"
+                    customEmoji.setCustomEmoji(nameTextView, notificationData.accountData.displayName, notificationData.accountData.allEmoji)
+                    avatarImageView.setNullTint()
+                    Glide.with(avatarImageView)
+                        .load(notificationData.accountData.avatarStatic)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(avatarImageView)
+                    // statusあればトゥート表示
+                    if (notificationData.status != null) {
+                        customEmoji.setCustomEmoji(contentTextView, notificationData.status.content, notificationData.status.allEmoji)
+                    }
+                    // ダークモードなら
+                    setCardViewStyle(cardView)
+                }
+            }
+            holder is BoostViewHolder -> {
+                holder.apply {
+                    // トゥート
+                    val context = nameTextView.context
+                    val status = timeLineItemDataList.get(position).statusData ?: return
+                    val reblogStatus = status.reblogStatusData ?: return
+                    // TL名
+                    timeLineName.text =
+                        timeLineItemDataList.get(position).allTimeLineData.timeLineName
+                    // ブースト元トゥート表示
+                    boostIDTextView.text = "@${reblogStatus.accountData.acct}"
+                    customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.accountData.displayName, reblogStatus.accountData.allEmoji)
+                    customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.content, reblogStatus.allEmoji)
+                    boostAvatarImageView.setNullTint()
+                    Glide.with(boostAvatarImageView)
+                        .load(reblogStatus.accountData.avatarStatic)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(boostAvatarImageView)
+                    // ブーストしたユーザーのアバター
+                    idTextView.text = "@${status.accountData.acct}"
+                    customEmoji.setCustomEmoji(nameTextView, "${status.accountData.displayName}<br>${context.getString(R.string.boosted)}", status.accountData.allEmoji)
+                    avatarImageView.setNullTint()
+                    Glide.with(avatarImageView)
+                        .load(status.accountData.avatarStatic)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(avatarImageView)
+                    // お気に入り、ブースト
+                    initFav(favoutiteButton, status)
+                    initBoost(boostButton, status)
+                    applyButton(favoutiteButton, reblogStatus.favouritesCount.toString(), reblogStatus.isFavourited, R.drawable.ic_star_border_black_24dp)
+                    applyButton(boostButton, reblogStatus.boostCount.toString(), reblogStatus.isBoosted, R.drawable.ic_repeat_black_24dp)
+                    // 詳細表示
+                    initInfo(moreButton, infoTextView, status)
+                    // ダークモードなら
+                    setCardViewStyle(cardView)
+                }
+            }
+            // Misskey
+            holder is MisskeyNoteViewHolder -> {
+                holder.apply {
+                    // Note
+                    val context = nameTextView.context
+                    val status = timeLineItemDataList.get(position).misskeyNoteData ?: return
+                    // TL名
+                    timeLineName.text =
+                        timeLineItemDataList.get(position).allTimeLineData.timeLineName
+                    // トゥート表示
+                    idTextView.text = "@${status.user.username}"
+                    customEmoji.setCustomEmoji(nameTextView, status.user.name, status.user.emoji)
+                    customEmoji.setCustomEmoji(contentTextView, status.text.escapeToBrTag(), status.emoji)
+                    avatarImageView.setNullTint()
+                    Glide.with(avatarImageView)
+                        .load(status.user.avatarUrl)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(avatarImageView)
+                    // リアクション、りのーと
+                    reactionTextView.setText(status.reaction.joinToString(separator = " | ") { misskeyReactionData -> "${misskeyReactionData.reaction}:${misskeyReactionData.reactionCount}" })
+                    initMisskeyFav(favoutiteButton, status)
+                    initRenote(boostButton, status)
+                    applyButton(boostButton, status.renoteCount.toString(), status.isRenote, R.drawable.ic_repeat_black_24dp)
+                    // 詳細表示
+                    initMisskeyInfo(moreButton, infoTextView, status)
+                    // ダークモードなら
+                    setCardViewStyle(cardView)
+                }
+            }
+            holder is MisskeyNotificationViewHolder -> {
+                holder.apply {
+                    // 通知
+                    val context = nameTextView.context
+                    val notificationData =
+                        timeLineItemDataList.get(position).misskeyNotificationData ?: return
+                    // TL名
+                    timeLineName.text =
+                        timeLineItemDataList.get(position).allTimeLineData.timeLineName
+                    // 通知タイプ
+                    notificationTextView.text = when (notificationData.type) {
+                        "reaction" -> notificationData.reaction
+                        "renote" -> context.getText(R.string.notification_reblog)
+                        "mention" -> context.getText(R.string.notification_mention)
+                        "follow" -> context.getText(R.string.notification_follow)
+                        else -> context.getText(R.string.notification_favourite)
+                    }
+                    // アカウント情報
+                    idTextView.text = "@${notificationData.user.username}"
+                    customEmoji.setCustomEmoji(nameTextView, notificationData.user.name, notificationData.user.emoji)
+                    avatarImageView.setNullTint()
+                    Glide.with(avatarImageView)
+                        .load(notificationData.user.avatarUrl)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(avatarImageView)
+                    // statusあればトゥート表示
+                    if (notificationData.note != null) {
+                        customEmoji.setCustomEmoji(contentTextView, notificationData.note.text.escapeToBrTag(), notificationData.note.emoji)
+                    }
+                    // ダークモードなら
+                    setCardViewStyle(cardView)
+                }
+            }
+            holder is MisskeyRenoteViewHolder -> {
+                holder.apply {
+                    // トゥート
+                    val context = nameTextView.context
+                    val status = timeLineItemDataList.get(position).misskeyNoteData ?: return
+                    val reblogStatus = status.renote ?: return
+                    // TL名
+                    timeLineName.text =
+                        timeLineItemDataList.get(position).allTimeLineData.timeLineName
+                    // ブースト元トゥート表示
+                    boostIDTextView.text = "@${reblogStatus.user.username}"
+                    customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.user.name, reblogStatus.user.emoji)
+                    customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.text.escapeToBrTag(), reblogStatus.emoji)
+                    boostAvatarImageView.setNullTint()
+                    Glide.with(boostAvatarImageView)
+                        .load(reblogStatus.user.avatarUrl)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(boostAvatarImageView)
+                    // ブーストしたユーザーのアバター
+                    idTextView.text = "@${status.user.username}"
+                    customEmoji.setCustomEmoji(nameTextView, "${status.user.name}<br>${context.getString(R.string.renoted)}", status.user.emoji)
+                    // nullのときある
+                    if (status.text != "null") {
+                        customEmoji.setCustomEmoji(contentTextView, status.text.escapeToBrTag(), status.emoji)
+                    } else {
+                        contentTextView.visibility = View.GONE
+                    }
+                    avatarImageView.setNullTint()
+                    Glide.with(avatarImageView)
+                        .load(status.user.avatarUrl)
+                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                        .into(avatarImageView)
+                    // リアクション、りのーと
+                    initMisskeyFav(favoutiteButton, status)
+                    initRenote(boostButton, status)
+                    applyButton(boostButton, status.renoteCount.toString(), status.isRenote, R.drawable.ic_repeat_black_24dp)
+                    // 詳細表示
+                    initMisskeyInfo(moreButton, infoTextView, status)
+                    // ダークモードなら
+                    setCardViewStyle(cardView)
+                }
             }
         }
     }
@@ -212,6 +351,42 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         infoTextView.text = text
     }
 
+    private fun initMisskeyInfo(moreButton: Button, infoTextView: TextView, note: MisskeyNoteData) {
+        // 表示・非表示
+        moreButton.setOnClickListener {
+            if (infoTextView.visibility == View.GONE) {
+                infoTextView.visibility = View.VISIBLE
+                (moreButton as MaterialButton).icon =
+                    infoTextView.context.getDrawable(R.drawable.ic_expand_less_black_24dp)
+                infoVISIBLEList.add(note.noteId)
+            } else {
+                infoTextView.visibility = View.GONE
+                (moreButton as MaterialButton).icon =
+                    infoTextView.context.getDrawable(R.drawable.ic_expand_more_black_24dp)
+                infoVISIBLEList.remove(note.noteId)
+            }
+        }
+        // リサイクルされるので
+        if (infoVISIBLEList.contains(note.noteId)) {
+            infoTextView.visibility = View.VISIBLE
+            (moreButton as MaterialButton).icon =
+                infoTextView.context.getDrawable(R.drawable.ic_expand_less_black_24dp)
+        } else {
+            infoTextView.visibility = View.GONE
+            (moreButton as MaterialButton).icon =
+                infoTextView.context.getDrawable(R.drawable.ic_expand_more_black_24dp)
+        }
+
+        val text = """
+                投稿日時：
+                ${note.createdAt.toTimeFormat()}
+                ノートID：
+                ${note.noteId}
+            """.trimIndent()
+        infoTextView.text = text
+    }
+
+
     /**
      * ふぁぼ、ブーストを適用する
      * @param button ボタン
@@ -252,6 +427,58 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         mainActivity.showSnackBar("${context.getString(R.string.error)}：${response.code}")
                     }
                 }
+            }
+        }
+    }
+
+    private fun initMisskeyFav(button: Button, note: MisskeyNoteData) {
+        button.setOnClickListener {
+            // りアクションBottomSheet出す
+            val misskeyReactionBottomSheet = MisskeyReactionBottomSheet(note)
+            misskeyReactionBottomSheet.show(mainActivity.supportFragmentManager, "reaction")
+        }
+    }
+
+    // renoteする。
+    private fun initRenote(button: Button, note: MisskeyNoteData) {
+        val context = button.context
+        button.setOnClickListener {
+            // Renoteする
+            val misskeyNoteAPI = MisskeyNoteAPI(note.instanceToken)
+            val misskeyParser = MisskeyParser()
+            GlobalScope.launch(Dispatchers.Main) {
+                val response = withContext(Dispatchers.IO) {
+                    misskeyNoteAPI.notesCreate("", MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC, true, note.renote!!.noteId).await()
+                }
+                if (response.isSuccessful) {
+                    // 成功
+                    val responseNote =
+                        misskeyParser.parseNote(response.body?.string()!!, note.instanceToken)
+                    applyMisskeyButton(button, responseNote.renoteCount.toString(), true, R.drawable.ic_repeat_black_24dp)
+                    // 適用
+                    note.isRenote = true
+                    note.renoteCount = responseNote.renoteCount
+                } else {
+                    mainActivity.showSnackBar("${context.getString(R.string.error)}：${response.code}")
+                }
+            }
+        }
+    }
+
+    /**
+     * UIに反映させる
+     * @param button ボタン
+     * @param isCheck チェックマーク付けるなら
+     * @param drawable isCheckedがfalseのときのDrawable
+     * @param text Buttonにセットするテキスト
+     * */
+    fun applyMisskeyButton(button: Button, text: String, isCheck: Boolean, drawable: Int) {
+        (button as MaterialButton).apply {
+            setText(text)
+            if (isCheck) {
+                icon = context.getDrawable(R.drawable.ic_done_black_24dp)
+            } else {
+                icon = context.getDrawable(drawable)
             }
         }
     }
@@ -339,6 +566,63 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val moreButton = itemView.findViewById<Button>(R.id.adapter_timeline_more)
         val infoTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_info_textview)
     }
+
+    // Misskey Note ViewHolder
+    inner class MisskeyNoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
+        val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
+        val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
+        val contentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_content)
+        val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
+        val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
+        val boostButton = itemView.findViewById<Button>(R.id.adapter_timeline_boost)
+        val reactionTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_reaction)
+
+        // 詳細表示
+        val moreButton = itemView.findViewById<Button>(R.id.adapter_timeline_more)
+        val infoTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_info_textview)
+    }
+
+    // Misskey 通知ViewHolder
+    inner class MisskeyNotificationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val notificationTextView =
+            itemView.findViewById<TextView>(R.id.adapter_notification_type)
+        val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
+        val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
+        val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
+        val contentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_content)
+        val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
+    }
+
+    // Misskey Renote ViewHolder
+    inner class MisskeyRenoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
+        val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
+        val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
+        val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
+        val contentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_content)
+
+        // Boost
+        val boostNameTextView =
+            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_user_name)
+        val boostIDTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_id)
+        val boostAvatarImageView =
+            itemView.findViewById<ImageView>(R.id.adapter_timeline_boost_avatar)
+        val boostContentTextView =
+            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_content)
+
+        // fav
+        val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
+        val boostButton = itemView.findViewById<Button>(R.id.adapter_timeline_boost)
+
+        // 詳細表示
+        val moreButton = itemView.findViewById<Button>(R.id.adapter_timeline_more)
+        val infoTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_info_textview)
+    }
+
 
     override fun getItemCount(): Int {
         return timeLineItemDataList.size
