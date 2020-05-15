@@ -1,10 +1,13 @@
 package io.github.takusan23.kaisendonmk2.Adapter
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.Switch
 import androidx.recyclerview.widget.RecyclerView
+import io.github.takusan23.kaisendonmk2.BottomFragment.LoadTimeLineEditBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.LoadTimeLineListBottomSheet
 import io.github.takusan23.kaisendonmk2.DataClass.AllTimeLineData
 import io.github.takusan23.kaisendonmk2.MainActivity
@@ -46,12 +49,25 @@ class AllTimeLineAdapter(val allTimeLineList: ArrayList<AllTimeLineData>) : Recy
                 // 有効/無効を反転
                 allTimeLineJSON.setAllTimeLineEnable(allTimeLineData.timeLineName, isChecked)
             }
+
+            // 見た目
+            allTimeLineAdapterStyle.setOnClickListener {
+                val loadTimeLineEditBottomSheet = LoadTimeLineEditBottomSheet()
+                val bundle = Bundle().apply {
+                    putString("name", allTimeLineData.timeLineName)
+                }
+                loadTimeLineEditBottomSheet.arguments = bundle
+                loadTimeLineEditBottomSheet.show(mainActivity.supportFragmentManager, "style")
+            }
+
         }
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val allTimeLineAdapterSwitch =
             itemView.findViewById<Switch>(R.id.adapter_all_tl_setting_switch)
+        val allTimeLineAdapterStyle =
+            itemView.findViewById<ImageView>(R.id.adapter_tl_setting_color)
     }
 
 }

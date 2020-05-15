@@ -53,4 +53,24 @@
         android:padding="10dp"
         android:text="@string/timeline_setting_background_image_reset" />
 
+    <TextView
+        android:id="@+id/bottom_fragment_timeline_setting_font_set"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_font_set" />
+
+    <TextView
+        android:id="@+id/bottom_fragment_timeline_setting_font_reset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_font_reset" />
+
 </LinearLayout>

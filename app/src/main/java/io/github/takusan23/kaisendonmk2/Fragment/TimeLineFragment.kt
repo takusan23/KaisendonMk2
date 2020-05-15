@@ -1,6 +1,7 @@
 package io.github.takusan23.kaisendonmk2.Fragment
 
 import android.content.SharedPreferences
+import android.graphics.Typeface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -62,8 +63,9 @@ class TimeLineFragment : Fragment() {
 
             // RecyclerView初期化
             initRecyclerView()
-            // 背景画像とか
+            // 背景画像とかフォントとか
             setTimeLineBackgroundImage()
+            setFont()
 
             initAllTimeLine()
             initAllTimeLineStreaming()
@@ -87,7 +89,6 @@ class TimeLineFragment : Fragment() {
         }
         // 読み込む
         val allTimeLineJSON = AllTimeLineJSON(context)
-        val loadTimeLineList = allTimeLineJSON.loadTimeLineSettingJSON()
         GlobalScope.launch(Dispatchers.IO) {
             allTimeLineJSON.loadTimeLineSettingJSON().forEach { allTimeLineData ->
                 // 有効時 で 通知以外
@@ -282,6 +283,15 @@ class TimeLineFragment : Fragment() {
                 .into(fragment_timeline_background)
         } else {
             fragment_timeline_background.setImageDrawable(null)
+        }
+    }
+
+    // フォントセット
+    fun setFont() {
+        val file = File("${context?.getExternalFilesDir(null)}/font.ttf")
+        if (file.exists()) {
+            (activity as? MainActivity)?.getTimeLineFragment()?.timeLineAdapter?.font =
+                Typeface.createFromFile(file)
         }
     }
 

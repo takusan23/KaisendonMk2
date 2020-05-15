@@ -1,10 +1,9 @@
 package io.github.takusan23.kaisendonmk2.Adapter
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.drawable.Animatable
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +11,6 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -21,11 +19,10 @@ import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
 import io.github.takusan23.kaisendonmk2.BottomFragment.MisskeyReactionBottomSheet
 import io.github.takusan23.kaisendonmk2.MastodonAPI.StatusAPI
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
+import io.github.takusan23.kaisendonmk2.DataClass.AllTimeLineData
 import io.github.takusan23.kaisendonmk2.DataClass.StatusData
 import io.github.takusan23.kaisendonmk2.DataClass.TimeLineItemData
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
@@ -43,6 +40,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.w3c.dom.Text
+import java.io.File
+import java.lang.reflect.Type
 
 // タイムライン表示RecyclerView
 class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineItemData>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -52,8 +52,14 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     val customEmoji = CustomEmoji()
     val glideImageLoad = GlideImageLoad()
 
+    // フォントなど
+    lateinit var font: Typeface
+
     // 詳細表示してるCardViewのトゥートID配列
     private val infoVISIBLEList = arrayListOf<String>()
+
+    // TextViewでふぉからー
+    lateinit var defaultTextColor: ColorStateList
 
     // レイアウトの定数（onCreateViewHolder()で使う）
     companion object {
@@ -129,8 +135,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     applyButton(boostButton, status.boostCount.toString(), status.isBoosted, R.drawable.ic_repeat_black_24dp)
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
-                    // ダークモードなら
-                    setCardViewStyle(cardView)
+                    // 見た目
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).allTimeLineData)
+                    setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
             holder is NotificationViewHolder -> {
@@ -160,8 +167,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     if (notificationData.status != null) {
                         customEmoji.setCustomEmoji(contentTextView, notificationData.status.content, notificationData.status.allEmoji)
                     }
-                    // ダークモードなら
-                    setCardViewStyle(cardView)
+                    // 見た目
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).allTimeLineData)
+                    setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
             holder is BoostViewHolder -> {
@@ -193,8 +201,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     applyButton(boostButton, reblogStatus.boostCount.toString(), reblogStatus.isBoosted, R.drawable.ic_repeat_black_24dp)
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
-                    // ダークモードなら
-                    setCardViewStyle(cardView)
+                    // 見た目
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).allTimeLineData)
+                    setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
             // Misskey
@@ -220,8 +229,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     applyButton(boostButton, status.renoteCount.toString(), status.isRenote, R.drawable.ic_repeat_black_24dp)
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
-                    // ダークモードなら
-                    setCardViewStyle(cardView)
+                    // 見た目
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).allTimeLineData)
+                    setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
             holder is MisskeyNotificationViewHolder -> {
@@ -251,8 +261,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     if (notificationData.note != null) {
                         customEmoji.setCustomEmoji(contentTextView, notificationData.note.text.escapeToBrTag(), notificationData.note.emoji)
                     }
-                    // ダークモードなら
-                    setCardViewStyle(cardView)
+                    // 見た目
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).allTimeLineData)
+                    setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
             holder is MisskeyRenoteViewHolder -> {
@@ -289,8 +300,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     applyButton(boostButton, status.renoteCount.toString(), status.isRenote, R.drawable.ic_repeat_black_24dp)
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
-                    // ダークモードなら
-                    setCardViewStyle(cardView)
+                    // 見た目
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).allTimeLineData)
+                    setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
         }
@@ -327,18 +339,50 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     }
 
     // CardViewの見た目
-    private fun setCardViewStyle(cardView: CardView) {
+    private fun setCardViewStyle(cardView: CardView, textView: TextView, allTimeLineData: AllTimeLineData) {
         (cardView as MaterialCardView).apply {
-            setStrokeColor(ColorStateList.valueOf(Color.parseColor("#757575")))
-            strokeWidth = 2
-            if (isDarkMode(context)) {
-                setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#000000")))
-            } else {
-                setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#ffffff")))
+            if (!::defaultTextColor.isInitialized) {
+                defaultTextColor = TextView(context).textColors
             }
+            strokeWidth = 2
+            if (allTimeLineData.timeLineTextColor.isNotEmpty()) {
+                textView.setTextColor(Color.parseColor(allTimeLineData.timeLineTextColor))
+            } else {
+                textView.setTextColor(defaultTextColor)
+            }
+            // 色設定があれば
+            if (allTimeLineData.timeLineBackground.isNotEmpty()) {
+                setStrokeColor(ColorStateList.valueOf(Color.parseColor(allTimeLineData.timeLineBackground)))
+            } else {
+                setStrokeColor(ColorStateList.valueOf(Color.parseColor("#757575")))
+            }
+             if (isDarkMode(context)) {
+                 setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#000000")))
+             } else {
+                 setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#ffffff")))
+             }
             alpha = 0.8F
         }
     }
+
+    /**
+     * フォントをTextViewに適用する
+     * @param textView 可変長引数です。指定したViewをまとめてフォント設定します
+     * */
+    fun setFont(vararg textView: TextView) {
+        textView.forEach {
+            if (!::font.isInitialized) {
+                val file = File("${it.context.getExternalFilesDir(null)}/font.ttf")
+                if (file.exists()) {
+                    font = Typeface.createFromFile(file)
+                } else {
+                    font = Typeface.DEFAULT
+                }
+            }
+            it.typeface = font
+        }
+    }
+
 
     private fun initInfo(moreButton: Button, infoTextView: TextView, status: StatusData) {
         // 表示・非表示

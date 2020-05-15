@@ -59,4 +59,10 @@
     <string name="timeline_setting_image_stop_gif">GIFアニメを止める（GIF画像は電力を多く使います）</string>
     <string name="timeline_setting_background_image_set">タイムラインの背景設定</string>
     <string name="timeline_setting_background_image_reset">タイムラインの背景設定をリセット</string>
+    <string name="load_timeline_background">タイムラインの色</string>
+    <string name="load_timeline_text_color">タイムラインのテキスト色</string>
+    <string name="load_timeline_title">タイムラインのタイトル</string>
+    <string name="save">保存</string>
+    <string name="timeline_setting_font_set">フォントを設定する</string>
+    <string name="timeline_setting_font_reset">フォント設定を削除する</string>
 </resources>

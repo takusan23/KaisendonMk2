@@ -74,6 +74,20 @@ class AllTimeLineJSON(val context: Context?) {
         saveTimeLineSettingJSON(list)
     }
 
+    /**
+     * タイムラインの色を変える機能
+     * */
+    fun setAllTimeLineColor(name: String, backgroundColor: String, textColor: String) {
+        val list = loadTimeLineSettingJSON()
+        list.forEach {
+            if (it.timeLineName == name) {
+                it.timeLineBackground = backgroundColor
+                it.timeLineTextColor = textColor
+            }
+        }
+        saveTimeLineSettingJSON(list)
+    }
+
     // InstanceToken -> JSONObject
     private fun toAccountJSONObject(instanceToken: InstanceToken): JSONObject {
         val jsonObject = JSONObject().apply {

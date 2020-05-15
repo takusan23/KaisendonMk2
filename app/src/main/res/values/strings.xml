@@ -58,4 +58,10 @@
     <string name="timeline_setting_image_stop_gif">Stop GIF animation (GIF images use a lot of power)</string>
     <string name="timeline_setting_background_image_set">Timeline background settings</string>
     <string name="timeline_setting_background_image_reset">Reset timeline background settings</string>
+    <string name="load_timeline_title">Timeline title</string>
+    <string name="load_timeline_background">Timeline color</string>
+    <string name="load_timeline_text_color">Timeline text color</string>
+    <string name="save">Save</string>
+    <string name="timeline_setting_font_set">Set font</string>
+    <string name="timeline_setting_font_reset">Delete font settings</string>
 </resources>

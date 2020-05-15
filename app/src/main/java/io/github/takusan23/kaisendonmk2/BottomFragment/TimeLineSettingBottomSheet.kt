@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.database.Cursor
+import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
@@ -26,6 +27,9 @@ class TimeLineSettingBottomSheet : BottomSheetDialogFragment() {
 
     // 背景画像リクエストコード
     val REQURST_CODE = 816
+
+    // フォントリクエストコード
+    val FONT_REQUEST_CODE = 114
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.bottom_fragment_timeline_setting, container, false)
@@ -52,27 +56,65 @@ class TimeLineSettingBottomSheet : BottomSheetDialogFragment() {
         bottom_fragment_timeline_setting_background_reset.setOnClickListener {
             deleteBackgroundImg()
         }
+
+        // フォント設定
+        bottom_fragment_timeline_setting_font_set.setOnClickListener {
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                type = "font/*"
+            }
+            startActivityForResult(intent, FONT_REQUEST_CODE)
+        }
+        bottom_fragment_timeline_setting_font_reset.setOnClickListener {
+            deleteFont()
+        }
+
+    }
+
+    // フォント削除
+    private fun deleteFont() {
+        val file = File("${context?.getExternalFilesDir(null)}/font.ttf")
+        file.delete()
+        (activity as? MainActivity)?.getTimeLineFragment()?.timeLineAdapter?.font = Typeface.DEFAULT
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == REQURST_CODE && resultCode == Activity.RESULT_OK) {
-            // 先客は消す
-            deleteBackgroundImg()
-            // アプリ固有ディレクトリにコピー
-            val uri = data?.data ?: return
-            val file = File("${context?.getExternalFilesDir(null)}/background")
-            if (!file.exists()) {
-                file.mkdir()
+        if (resultCode == Activity.RESULT_OK) {
+            when (requestCode) {
+                REQURST_CODE -> {
+                    // 先客は消す
+                    deleteBackgroundImg()
+                    // アプリ固有ディレクトリにコピー
+                    val uri = data?.data ?: return
+                    val file = File("${context?.getExternalFilesDir(null)}/background")
+                    if (!file.exists()) {
+                        file.mkdir()
+                    }
+                    // コピー
+                    val imageFile = File("${file.path}/${getFileName(uri)}")
+                    imageFile.createNewFile()
+                    val byteArray = context?.contentResolver?.openInputStream(uri)?.readBytes()
+                    if (byteArray != null) {
+                        imageFile.writeBytes(byteArray)
+                    }
+                    // 適用
+                    (activity as? MainActivity)?.getTimeLineFragment()?.setTimeLineBackgroundImage()
+                }
+                FONT_REQUEST_CODE -> {
+                    // フォント設定
+                    deleteFont()
+                    // アプリ固有ディレクトリにコピー
+                    val uri = data?.data ?: return
+                    val file = File("${context?.getExternalFilesDir(null)}/font.ttf")
+                    file.createNewFile()
+                    // こぴー
+                    val byteArray = context?.contentResolver?.openInputStream(uri)?.readBytes()
+                    if (byteArray != null) {
+                        file.writeBytes(byteArray)
+                    }
+                    // Adapterに適用
+                    (activity as? MainActivity)?.getTimeLineFragment()?.setFont()
+                }
             }
-            // コピー
-            val imageFile = File("${file.path}/${getFileName(uri)}")
-            imageFile.createNewFile()
-            val byteArray = context?.contentResolver?.openInputStream(uri)?.readBytes()
-            if (byteArray != null) {
-                imageFile.writeBytes(byteArray)
-            }
-            // 適用
-            (activity as? MainActivity)?.getTimeLineFragment()?.setTimeLineBackgroundImage()
         }
     }
 
