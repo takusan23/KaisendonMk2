@@ -50,6 +50,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     lateinit var mainActivity: MainActivity
 
     val customEmoji = CustomEmoji()
+    val glideImageLoad = GlideImageLoad()
 
     // 詳細表示してるCardViewのトゥートID配列
     private val infoVISIBLEList = arrayListOf<String>()
@@ -306,21 +307,22 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val isMobileDataImageHide =
             preferences.getBoolean("timeline_setting_image_hide_mobile", false) && isConnectionMobileData(context) // モバイルデータ回線なら非表示
         val isStopGifAnimation = preferences.getBoolean("timeline_setting_image_gif_stop", false)
-        if (!isHideImage || !isMobileDataImageHide) {
+        if (isHideImage || isMobileDataImageHide) {
+            // キャッシュがあれば表示。なければ消す
+            glideImageLoad.loadOffline(avatarImageView, url, true, false)
+        } else {
+            // ネットから持ってくる
             Glide.with(avatarImageView)
                 .load(url)
                 .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
                 .into(avatarImageView)
-            // GIF止める
-            if (isStopGifAnimation) {
-                val drawable = avatarImageView.drawable
-                if (drawable is GifDrawable) {
-                    drawable.stop()
-                }
+        }
+        // GIF止める
+        if (isStopGifAnimation) {
+            val drawable = avatarImageView.drawable
+            if (drawable is GifDrawable) {
+                drawable.stop()
             }
-        } else {
-            // 非表示へ
-            avatarImageView.visibility = View.GONE
         }
     }
 
