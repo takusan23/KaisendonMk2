@@ -91,79 +91,83 @@ class TimeLineFragment : Fragment() {
         // 読み込む
         val allTimeLineJSON = AllTimeLineJSON(context)
         GlobalScope.launch(Dispatchers.IO) {
-            allTimeLineJSON.loadTimeLineSettingJSON().forEach { allTimeLineData ->
-                // 有効時 で 通知以外
-                if (allTimeLineData.isEnable && allTimeLineData.timeLineLoad != "notification") {
-                    if (allTimeLineData.service == "mastodon") {
-                        // TL取得
-                        val timeLineAPI = TimeLineAPI(allTimeLineData.instanceToken)
-                        val timeLineParser = TimeLineParser()
-                        val response = when (allTimeLineData.timeLineLoad) {
-                            "home" -> timeLineAPI.getHomeTimeLine().await().body?.string()
-                            "local" -> timeLineAPI.getLocalTimeLine().await().body?.string()
-                            else -> timeLineAPI.getHomeTimeLine().await().body?.string()
-                        }
-                        // 追加
-                        timeLineParser.parseTL(response, allTimeLineData.instanceToken).forEach { statusData ->
-                            val timeLineItemData = TimeLineItemData(allTimeLineData, statusData)
-                            timeLineItemDataList.add(timeLineItemData)
-                        }
-                    } else {
-                        // Misskey TL取得
-                        val misskeyTimeLineAPI = MisskeyTimeLineAPI(allTimeLineData.instanceToken)
-                        val misskeyParser = MisskeyParser()
-                        val response = when (allTimeLineData.timeLineLoad) {
-                            "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine().await().body?.string()
-                            "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine().await().body?.string()
-                            else -> misskeyTimeLineAPI.getHomeNotesTimeLine().await().body?.string()
-                        }
-                        // 追加
-                        misskeyParser.parseTimeLine(response, allTimeLineData.instanceToken).forEach { misskeyNoteData ->
-                            val timeLineItemData =
-                                TimeLineItemData(allTimeLineData, null, null, misskeyNoteData, null)
-                            timeLineItemDataList.add(timeLineItemData)
+            withContext(Dispatchers.IO) {
+                allTimeLineJSON.loadTimeLineSettingJSON().forEach { allTimeLineData ->
+                    // 有効時 で 通知以外
+                    if (allTimeLineData.isEnable && allTimeLineData.timeLineLoad != "notification") {
+                        if (allTimeLineData.service == "mastodon") {
+                            // TL取得
+                            val timeLineAPI = TimeLineAPI(allTimeLineData.instanceToken)
+                            val timeLineParser = TimeLineParser()
+                            val response = when (allTimeLineData.timeLineLoad) {
+                                "home" -> timeLineAPI.getHomeTimeLine().await().body?.string()
+                                "local" -> timeLineAPI.getLocalTimeLine().await().body?.string()
+                                else -> timeLineAPI.getHomeTimeLine().await().body?.string()
+                            }
+                            // 追加
+                            timeLineParser.parseTL(response, allTimeLineData.instanceToken).forEach { statusData ->
+                                val timeLineItemData = TimeLineItemData(allTimeLineData, statusData)
+                                timeLineItemDataList.add(timeLineItemData)
+                            }
+                        } else {
+                            // Misskey TL取得
+                            val misskeyTimeLineAPI =
+                                MisskeyTimeLineAPI(allTimeLineData.instanceToken)
+                            val misskeyParser = MisskeyParser()
+                            val response = when (allTimeLineData.timeLineLoad) {
+                                "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine().await().body?.string()
+                                "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine().await().body?.string()
+                                else -> misskeyTimeLineAPI.getHomeNotesTimeLine().await().body?.string()
+                            }
+                            // 追加
+                            misskeyParser.parseTimeLine(response, allTimeLineData.instanceToken).forEach { misskeyNoteData ->
+                                val timeLineItemData =
+                                    TimeLineItemData(allTimeLineData, null, null, misskeyNoteData, null)
+                                timeLineItemDataList.add(timeLineItemData)
+                            }
                         }
                     }
                 }
-                // 並び替え / 同じID排除 など
-                timeLineItemDataList.sortByDescending { timeLineItemData ->
-                    when {
-                        timeLineItemData.statusData != null -> timeLineItemData.statusData.createdAt.toUnixTime()
-                        timeLineItemData.notificationData != null -> timeLineItemData.notificationData.createdAt.toUnixTime()
-                        timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.createdAt.toUnixTime()
-                        timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.createdAt.toUnixTime()
-                        else -> 0 // ここ来ることはまずありえない
-                    }
+            }
+            // 並び替え / 同じID排除 など
+            timeLineItemDataList.sortByDescending { timeLineItemData ->
+                when {
+                    timeLineItemData.statusData != null -> timeLineItemData.statusData.createdAt.toUnixTime()
+                    timeLineItemData.notificationData != null -> timeLineItemData.notificationData.createdAt.toUnixTime()
+                    timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.createdAt.toUnixTime()
+                    timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.createdAt.toUnixTime()
+                    else -> 0 // ここ来ることはまずありえない
                 }
-                timeLineItemDataList = timeLineItemDataList.distinctBy { timeLineItemData ->
-                    when {
-                        timeLineItemData.statusData != null -> timeLineItemData.statusData.id
-                        timeLineItemData.notificationData != null -> timeLineItemData.notificationData.notificationId
-                        timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.noteId
-                        timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.id
-                        else -> 0 // ここ来ることはまずありえない
-                    }
-                } as ArrayList<TimeLineItemData>
-                // 重複対策
-                addedIdList = timeLineItemDataList.map { timeLineItemData ->
-                    timeLineItemData.statusData?.id
-                        ?: timeLineItemData.notificationData?.notificationId
-                        ?: timeLineItemData.misskeyNoteData?.noteId
-                        ?: timeLineItemData.misskeyNotificationData?.id
-                } as ArrayList<String>
-                // UI反映
-                withContext(Dispatchers.Main) {
-                    if (timeLineItemDataList.isNotEmpty()) {
-                        fragment_timeline_swipe?.isRefreshing = false
-                        initRecyclerView()
-                        if (::mainActivity.isInitialized) {
-                            mainActivity.showSnackBar("${getString(R.string.timeline_item_size)}：${timeLineItemDataList.size}")
-                        }
+            }
+            timeLineItemDataList = timeLineItemDataList.distinctBy { timeLineItemData ->
+                when {
+                    timeLineItemData.statusData != null -> timeLineItemData.statusData.id
+                    timeLineItemData.notificationData != null -> timeLineItemData.notificationData.notificationId
+                    timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.noteId
+                    timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.id
+                    else -> 0 // ここ来ることはまずありえない
+                }
+            } as ArrayList<TimeLineItemData>
+            // 重複対策
+            addedIdList = timeLineItemDataList.map { timeLineItemData ->
+                timeLineItemData.statusData?.id
+                    ?: timeLineItemData.notificationData?.notificationId
+                    ?: timeLineItemData.misskeyNoteData?.noteId
+                    ?: timeLineItemData.misskeyNotificationData?.id
+            } as ArrayList<String>
+            // UI反映
+            withContext(Dispatchers.Main) {
+                if (timeLineItemDataList.isNotEmpty()) {
+                    fragment_timeline_swipe?.isRefreshing = false
+                    initRecyclerView()
+                    if (::mainActivity.isInitialized) {
+                        mainActivity.showSnackBar("${getString(R.string.timeline_item_size)}：${timeLineItemDataList.size}")
                     }
                 }
             }
         }
     }
+
 
     // 表示するタイムラインのストリーミングへ接続する
     fun initAllTimeLineStreaming() {

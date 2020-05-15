@@ -145,6 +145,14 @@ class MainActivity : AppCompatActivity() {
             // えもじ
             initEmoji().await()
         }
+        // 共有から開いたとき
+        if (intent.action == Intent.ACTION_SEND) {
+            intent.extras?.apply {
+                val text = this.getCharSequence(Intent.EXTRA_TEXT)
+                activity_main_text_input.setText(text)
+            }
+            showPostCard()
+        }
         // 投稿ボタン
         activity_main_post.setOnClickListener {
             // 本当に投稿しても良い？
