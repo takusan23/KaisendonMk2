@@ -51,4 +51,9 @@
     <string name="misskey_visibility_followers">Followers</string>
     <string name="misskey_visibility_specified">Specified</string>
     <string name="misskey_visibility_private">Private</string>
+    <string name="timeline_setting_streaming">Disable streaming API</string>
+    <string name="timeline_setting_image_hide">Hide image</string>
+    <string name="timeline_setting">Timeline settings</string>
+    <string name="timeline_setting_image_hide_mobile">Hide images on mobile data lines</string>
+    <string name="timeline_setting_image_stop_gif">Stop GIF animation (GIF images use a lot of power)</string>
 </resources>

@@ -1,10 +1,12 @@
 package io.github.takusan23.kaisendonmk2.Fragment
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import io.github.takusan23.kaisendonmk2.MastodonAPI.TimeLineAPI
 import io.github.takusan23.kaisendonmk2.Adapter.TimelineRecyclerViewAdapter
@@ -29,6 +31,9 @@ class TimeLineFragment : Fragment() {
 
     lateinit var mainActivity: MainActivity
 
+    // 設定
+    lateinit var prefSetting: SharedPreferences
+
     // Adapter
     lateinit var timeLineAdapter: TimelineRecyclerViewAdapter
 
@@ -48,6 +53,8 @@ class TimeLineFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        prefSetting = PreferenceManager.getDefaultSharedPreferences(context)
 
         if (isAdded) {
 
@@ -153,6 +160,10 @@ class TimeLineFragment : Fragment() {
     // 表示するタイムラインのストリーミングへ接続する
     fun initAllTimeLineStreaming() {
         onDestroy()
+        // 設定で無効ならストリーミング繋がない
+        if (prefSetting.getBoolean("timeline_setting_disable_streaming", false)) {
+            return
+        }
         GlobalScope.launch(Dispatchers.IO) {
             val allTimeLineJSON = AllTimeLineJSON(context)
             allTimeLineJSON.loadTimeLineSettingJSON().forEach {

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <Switch
+        android:id="@+id/bottom_fragment_timeline_setting_streaming"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_streaming" />
+
+    <Switch
+        android:id="@+id/bottom_fragment_timeline_setting_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_image_hide" />
+
+    <Switch
+        android:id="@+id/bottom_fragment_timeline_setting_mobile_image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_image_hide_mobile" />
+
+    <Switch
+        android:id="@+id/bottom_fragment_timeline_setting_gif"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_image_stop_gif" />
+
+</LinearLayout>

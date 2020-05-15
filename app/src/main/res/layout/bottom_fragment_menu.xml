@@ -14,7 +14,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/bottom_fragment_menu_timeline_edit"
+                android:id="@+id/bottom_fragment_menu_load_timeline_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
@@ -25,7 +25,7 @@
                 android:text="@string/timeline_edit" />
 
             <TextView
-                android:id="@+id/bottom_fragment_menu_style_edit"
+                android:id="@+id/bottom_fragment_menu_timeline_setting"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?attr/selectableItemBackground"
@@ -33,7 +33,7 @@
                 android:drawableStart="@drawable/ic_format_paint_black_24dp"
                 android:focusable="true"
                 android:padding="20dp"
-                android:text="@string/style_edit" />
+                android:text="@string/timeline_setting" />
 
             <TextView
                 android:id="@+id/bottom_fragment_menu_login"

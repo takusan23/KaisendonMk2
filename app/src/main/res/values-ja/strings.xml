@@ -52,4 +52,9 @@
     <string name="misskey_visibility_followers">フォロワーにのみ公開</string>
     <string name="misskey_visibility_specified">ダイレクト</string>
     <string name="misskey_visibility_private">プライベート</string>
+    <string name="timeline_setting_streaming">ストリーミングAPIを無効にする</string>
+    <string name="timeline_setting_image_hide">画像を非表示にする（通信量削減）</string>
+    <string name="timeline_setting">タイムラインの設定</string>
+    <string name="timeline_setting_image_hide_mobile">モバイルデータ回線のときは画像を非表示にする</string>
+    <string name="timeline_setting_image_stop_gif">GIFアニメを止める（GIF画像は電力を多く使います）</string>
 </resources>

@@ -1,7 +1,10 @@
 package io.github.takusan23.kaisendonmk2.Adapter
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.drawable.Animatable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +12,12 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -27,7 +33,9 @@ import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyNoteAPI
 import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
 import io.github.takusan23.kaisendonmk2.R
+import io.github.takusan23.kaisendonmk2.TimeLine.*
 import io.github.takusan23.kaisendonmk2.TimeLine.escapeToBrTag
+import io.github.takusan23.kaisendonmk2.TimeLine.isConnectionMobileData
 import io.github.takusan23.kaisendonmk2.TimeLine.isDarkMode
 import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import io.github.takusan23.kaisendonmk2.TimeLine.toTimeFormat
@@ -111,10 +119,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     customEmoji.setCustomEmoji(nameTextView, status.accountData.displayName, status.accountData.allEmoji)
                     customEmoji.setCustomEmoji(contentTextView, status.content, status.allEmoji)
                     avatarImageView.setNullTint()
-                    Glide.with(avatarImageView)
-                        .load(status.accountData.avatarStatic)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(avatarImageView)
+                    // 画像読み込み関数
+                    loadImage(avatarImageView, context, status.accountData.avatar)
                     // お気に入り、ブースト
                     initFav(favoutiteButton, status)
                     initBoost(boostButton, status)
@@ -147,10 +153,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     idTextView.text = "@${notificationData.accountData.acct}"
                     customEmoji.setCustomEmoji(nameTextView, notificationData.accountData.displayName, notificationData.accountData.allEmoji)
                     avatarImageView.setNullTint()
-                    Glide.with(avatarImageView)
-                        .load(notificationData.accountData.avatarStatic)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(avatarImageView)
+                    // 画像読み込み関数
+                    loadImage(avatarImageView, context, notificationData.accountData.avatar)
                     // statusあればトゥート表示
                     if (notificationData.status != null) {
                         customEmoji.setCustomEmoji(contentTextView, notificationData.status.content, notificationData.status.allEmoji)
@@ -173,18 +177,14 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.accountData.displayName, reblogStatus.accountData.allEmoji)
                     customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.content, reblogStatus.allEmoji)
                     boostAvatarImageView.setNullTint()
-                    Glide.with(boostAvatarImageView)
-                        .load(reblogStatus.accountData.avatarStatic)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(boostAvatarImageView)
+                    // 画像読み込み関数
+                    loadImage(boostAvatarImageView, context, reblogStatus.accountData.avatar)
                     // ブーストしたユーザーのアバター
                     idTextView.text = "@${status.accountData.acct}"
                     customEmoji.setCustomEmoji(nameTextView, "${status.accountData.displayName}<br>${context.getString(R.string.boosted)}", status.accountData.allEmoji)
                     avatarImageView.setNullTint()
-                    Glide.with(avatarImageView)
-                        .load(status.accountData.avatarStatic)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(avatarImageView)
+                    // 画像読み込み関数
+                    loadImage(avatarImageView, context, status.accountData.avatar)
                     // お気に入り、ブースト
                     initFav(favoutiteButton, status)
                     initBoost(boostButton, status)
@@ -210,10 +210,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     customEmoji.setCustomEmoji(nameTextView, status.user.name, status.user.emoji)
                     customEmoji.setCustomEmoji(contentTextView, status.text.escapeToBrTag(), status.emoji)
                     avatarImageView.setNullTint()
-                    Glide.with(avatarImageView)
-                        .load(status.user.avatarUrl)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(avatarImageView)
+                    // 画像読み込み関数
+                    loadImage(avatarImageView, context, status.user.avatarUrl)
                     // リアクション、りのーと
                     reactionTextView.setText(status.reaction.joinToString(separator = " | ") { misskeyReactionData -> "${misskeyReactionData.reaction}:${misskeyReactionData.reactionCount}" })
                     initMisskeyFav(favoutiteButton, status)
@@ -246,10 +244,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     idTextView.text = "@${notificationData.user.username}"
                     customEmoji.setCustomEmoji(nameTextView, notificationData.user.name, notificationData.user.emoji)
                     avatarImageView.setNullTint()
-                    Glide.with(avatarImageView)
-                        .load(notificationData.user.avatarUrl)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(avatarImageView)
+                    // 画像読み込み関数
+                    loadImage(avatarImageView, context, notificationData.user.avatarUrl)
                     // statusあればトゥート表示
                     if (notificationData.note != null) {
                         customEmoji.setCustomEmoji(contentTextView, notificationData.note.text.escapeToBrTag(), notificationData.note.emoji)
@@ -272,10 +268,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.user.name, reblogStatus.user.emoji)
                     customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.text.escapeToBrTag(), reblogStatus.emoji)
                     boostAvatarImageView.setNullTint()
-                    Glide.with(boostAvatarImageView)
-                        .load(reblogStatus.user.avatarUrl)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(boostAvatarImageView)
+                    // 画像読み込み関数
+                    loadImage(boostAvatarImageView, context, reblogStatus.user.avatarUrl)
                     // ブーストしたユーザーのアバター
                     idTextView.text = "@${status.user.username}"
                     customEmoji.setCustomEmoji(nameTextView, "${status.user.name}<br>${context.getString(R.string.renoted)}", status.user.emoji)
@@ -286,10 +280,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         contentTextView.visibility = View.GONE
                     }
                     avatarImageView.setNullTint()
-                    Glide.with(avatarImageView)
-                        .load(status.user.avatarUrl)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(avatarImageView)
+                    // 画像読み込み関数
+                    loadImage(avatarImageView, context, status.user.avatarUrl)
                     // リアクション、りのーと
                     initMisskeyFav(favoutiteButton, status)
                     initRenote(boostButton, status)
@@ -300,6 +292,35 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     setCardViewStyle(cardView)
                 }
             }
+        }
+    }
+
+    /**
+     * 画像を読み込む関数。
+     * モバイルデータ回線なら読み込まいとか
+     * */
+    private fun loadImage(avatarImageView: ImageView, context: Context?, url: String) {
+        // 画像読み込み設定
+        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        val isHideImage = preferences.getBoolean("timeline_setting_image_hide", false) // 強制画像非表示
+        val isMobileDataImageHide =
+            preferences.getBoolean("timeline_setting_image_hide_mobile", false) && isConnectionMobileData(context) // モバイルデータ回線なら非表示
+        val isStopGifAnimation = preferences.getBoolean("timeline_setting_image_gif_stop", false)
+        if (!isHideImage || !isMobileDataImageHide) {
+            Glide.with(avatarImageView)
+                .load(url)
+                .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                .into(avatarImageView)
+            // GIF止める
+            if (isStopGifAnimation) {
+                val drawable = avatarImageView.drawable
+                if (drawable is GifDrawable) {
+                    drawable.stop()
+                }
+            }
+        } else {
+            // 非表示へ
+            avatarImageView.visibility = View.GONE
         }
     }
 
@@ -623,9 +644,20 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val infoTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_info_textview)
     }
 
-
     override fun getItemCount(): Int {
         return timeLineItemDataList.size
+    }
+
+    // 画像を非表示するか
+    fun isImageHide(context: Context?): Boolean {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        return preferences.getBoolean("timeline_setting_image_hide", false)
+    }
+
+    // モバイルデータ通信で画像を非表示にするか。返り値は設定有効+モバイルデータ通信ならtrue
+    fun isImageHideMobileData(context: Context?): Boolean {
+        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        return preferences.getBoolean("timeline_setting_image_hide_mobile", false) && isConnectionMobileData(context)
     }
 
 }

@@ -25,16 +25,17 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // タイムラインの設定
-        bottom_fragment_menu_timeline_edit.setOnClickListener {
+        // 読み込むタイムラインの設定
+        bottom_fragment_menu_load_timeline_edit.setOnClickListener {
             val loadTimeLineListBottomSheet = LoadTimeLineListBottomSheet()
             loadTimeLineListBottomSheet.mainActivity = mainActivity
             loadTimeLineListBottomSheet.show(childFragmentManager, "timeline_setting_list")
         }
 
-        // 見た目設定
-        bottom_fragment_menu_style_edit.setOnClickListener {
-
+        // TL設定
+        bottom_fragment_menu_timeline_setting.setOnClickListener {
+            val timeLineSettingBottomSheet = TimeLineSettingBottomSheet()
+            timeLineSettingBottomSheet.show(childFragmentManager, "timeline_setting")
         }
 
         // ログイン
