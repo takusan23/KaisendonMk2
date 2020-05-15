@@ -64,4 +64,6 @@
     <string name="save">Save</string>
     <string name="timeline_setting_font_set">Set font</string>
     <string name="timeline_setting_font_reset">Delete font settings</string>
+    <string name="account_list">Account list</string>
+    <string name="menu">Menu</string>
 </resources>

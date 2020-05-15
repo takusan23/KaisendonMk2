@@ -1,6 +1,8 @@
 package io.github.takusan23.kaisendonmk2.TimeLine
 
 import android.content.Context
+import androidx.core.content.edit
+import androidx.preference.PreferenceManager
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
 import io.github.takusan23.kaisendonmk2.DataClass.AllTimeLineData
 import org.json.JSONArray
@@ -86,6 +88,37 @@ class AllTimeLineJSON(val context: Context?) {
             }
         }
         saveTimeLineSettingJSON(list)
+    }
+
+    /**
+     * アカウント消す
+     * @param token トークン
+     * */
+    fun deleteAccount(token: String) {
+        val list = loadTimeLineSettingJSON()
+        list.toList().forEach {
+            if (it.instanceToken.token == token) {
+                list.remove(it)
+            }
+        }
+        saveTimeLineSettingJSON(list)
+        // アカウントも消す
+        val prefSetting = PreferenceManager.getDefaultSharedPreferences(context)
+        val accountJSON = prefSetting.getString("account_json", null) ?: return
+        val jsonArray = JSONArray(accountJSON)
+        var index = -1
+        for (i in 0 until jsonArray.length()) {
+            val jsonObject = jsonArray.getJSONObject(i)
+            val jsonToken = jsonObject.getString("token")
+            if (jsonToken == token) {
+                index = i
+                break
+            }
+        }
+        if (index != -1) {
+            jsonArray.remove(index)
+        }
+        prefSetting.edit { putString("account_json", jsonArray.toString()) }
     }
 
     // InstanceToken -> JSONObject

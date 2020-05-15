@@ -3,8 +3,6 @@ package io.github.takusan23.kaisendonmk2.BottomFragment
 import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +15,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.github.takusan23.kaisendonmk2.R
 import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import kotlinx.android.synthetic.main.bottom_fragment_dialog.*
-import kotlinx.coroutines.GlobalScope
 import org.w3c.dom.Text
 
 /**
@@ -26,7 +23,7 @@ import org.w3c.dom.Text
  * @param buttonItems DialogBottomSheetItemの配列。
  * @param clickEvent クリック押したときのコールバック。引数は押した位置です。
  * */
-class DialogBottomSheet(val description: String, val buttonItems: ArrayList<DialogBottomSheetItem>, val clickEvent: (Int, BottomSheetDialogFragment) -> Unit) :
+class DialogBottomSheet(val description: String, val buttonItems: List<DialogBottomSheetItem>, val clickEvent: (Int, BottomSheetDialogFragment) -> Unit) :
     BottomSheetDialogFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

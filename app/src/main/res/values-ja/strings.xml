@@ -65,4 +65,6 @@
     <string name="save">保存</string>
     <string name="timeline_setting_font_set">フォントを設定する</string>
     <string name="timeline_setting_font_reset">フォント設定を削除する</string>
+    <string name="account_list">アカウントリスト</string>
+    <string name="menu">メニュー</string>
 </resources>
