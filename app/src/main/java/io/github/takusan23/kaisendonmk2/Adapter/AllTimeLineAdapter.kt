@@ -45,7 +45,6 @@ class AllTimeLineAdapter(val allTimeLineList: ArrayList<AllTimeLineData>) : Recy
             allTimeLineAdapterSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
                 // 有効/無効を反転
                 allTimeLineJSON.setAllTimeLineEnable(allTimeLineData.timeLineName, isChecked)
-                // loadTimeLineListBottomSheet.loadTimeLineSettingList()
             }
         }
     }

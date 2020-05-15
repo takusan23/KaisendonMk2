@@ -33,4 +33,24 @@
         android:padding="10dp"
         android:text="@string/timeline_setting_image_stop_gif" />
 
+    <TextView
+        android:id="@+id/bottom_fragment_timeline_setting_background_set"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_background_image_set" />
+
+    <TextView
+        android:id="@+id/bottom_fragment_timeline_setting_background_reset"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:text="@string/timeline_setting_background_image_reset" />
+
 </LinearLayout>

@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import com.bumptech.glide.Glide
 import io.github.takusan23.kaisendonmk2.MastodonAPI.TimeLineAPI
 import io.github.takusan23.kaisendonmk2.Adapter.TimelineRecyclerViewAdapter
 import io.github.takusan23.kaisendonmk2.DataClass.TimeLineItemData
@@ -26,6 +27,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.File
 
 class TimeLineFragment : Fragment() {
 
@@ -60,6 +62,8 @@ class TimeLineFragment : Fragment() {
 
             // RecyclerView初期化
             initRecyclerView()
+            // 背景画像とか
+            setTimeLineBackgroundImage()
 
             initAllTimeLine()
             initAllTimeLineStreaming()
@@ -83,8 +87,9 @@ class TimeLineFragment : Fragment() {
         }
         // 読み込む
         val allTimeLineJSON = AllTimeLineJSON(context)
-        allTimeLineJSON.loadTimeLineSettingJSON().forEach { allTimeLineData ->
-            GlobalScope.launch(Dispatchers.IO) {
+        val loadTimeLineList = allTimeLineJSON.loadTimeLineSettingJSON()
+        GlobalScope.launch(Dispatchers.IO) {
+            allTimeLineJSON.loadTimeLineSettingJSON().forEach { allTimeLineData ->
                 // 有効時 で 通知以外
                 if (allTimeLineData.isEnable && allTimeLineData.timeLineLoad != "notification") {
                     if (allTimeLineData.service == "mastodon") {
@@ -146,7 +151,7 @@ class TimeLineFragment : Fragment() {
                 } as ArrayList<String>
                 // UI反映
                 withContext(Dispatchers.Main) {
-                    if(timeLineItemDataList.isNotEmpty()) {
+                    if (timeLineItemDataList.isNotEmpty()) {
                         fragment_timeline_swipe?.isRefreshing = false
                         initRecyclerView()
                         if (::mainActivity.isInitialized) {
@@ -263,6 +268,20 @@ class TimeLineFragment : Fragment() {
                     }
                 }
             }
+        }
+    }
+
+    // 背景画像セット
+    fun setTimeLineBackgroundImage() {
+        // 画像パス
+        val file = File("${context?.getExternalFilesDir(null)}/background")
+        if (file.exists() && file.listFiles()?.isNotEmpty() == true) {
+            val imageFile = file.listFiles()?.get(0)
+            Glide.with(fragment_timeline_background)
+                .load(imageFile)
+                .into(fragment_timeline_background)
+        } else {
+            fragment_timeline_background.setImageDrawable(null)
         }
     }
 

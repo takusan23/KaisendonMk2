@@ -17,12 +17,10 @@ internal fun isConnectionMobileData(context: Context?): Boolean {
         val networkCapabilities =
             connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
         if (networkCapabilities?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) == true) {
-            //モバイルデータ通信なら画質変更メッセージ送信
             return true
         }
     } else {
         if (connectivityManager.activeNetworkInfo.type == ConnectivityManager.TYPE_MOBILE) {
-            //モバイルデータ通信なら画質変更メッセージ送信
             return true
         }
     }

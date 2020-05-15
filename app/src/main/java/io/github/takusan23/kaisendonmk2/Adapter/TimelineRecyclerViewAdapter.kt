@@ -334,6 +334,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
             } else {
                 setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#ffffff")))
             }
+            alpha = 0.8F
         }
     }
 

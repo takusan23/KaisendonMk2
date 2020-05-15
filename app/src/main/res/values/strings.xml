@@ -56,4 +56,6 @@
     <string name="timeline_setting">Timeline settings</string>
     <string name="timeline_setting_image_hide_mobile">Hide images on mobile data lines</string>
     <string name="timeline_setting_image_stop_gif">Stop GIF animation (GIF images use a lot of power)</string>
+    <string name="timeline_setting_background_image_set">Timeline background settings</string>
+    <string name="timeline_setting_background_image_reset">Reset timeline background settings</string>
 </resources>

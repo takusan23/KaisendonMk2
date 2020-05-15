@@ -57,4 +57,6 @@
     <string name="timeline_setting">タイムラインの設定</string>
     <string name="timeline_setting_image_hide_mobile">モバイルデータ回線のときは画像を非表示にする</string>
     <string name="timeline_setting_image_stop_gif">GIFアニメを止める（GIF画像は電力を多く使います）</string>
+    <string name="timeline_setting_background_image_set">タイムラインの背景設定</string>
+    <string name="timeline_setting_background_image_reset">タイムラインの背景設定をリセット</string>
 </resources>
