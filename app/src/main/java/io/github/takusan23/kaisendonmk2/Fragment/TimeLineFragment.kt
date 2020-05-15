@@ -21,6 +21,7 @@ import io.github.takusan23.kaisendonmk2.R
 import io.github.takusan23.kaisendonmk2.StreamingAPI.MisskeyStreamingAPI
 import io.github.takusan23.kaisendonmk2.StreamingAPI.StreamingAPI
 import io.github.takusan23.kaisendonmk2.TimeLine.AllTimeLineJSON
+import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import io.github.takusan23.kaisendonmk2.TimeLine.toUnixTime
 import kotlinx.android.synthetic.main.fragment_timeline.*
 import kotlinx.coroutines.Dispatchers
@@ -278,6 +279,7 @@ class TimeLineFragment : Fragment() {
         val file = File("${context?.getExternalFilesDir(null)}/background")
         if (file.exists() && file.listFiles()?.isNotEmpty() == true) {
             val imageFile = file.listFiles()?.get(0)
+            fragment_timeline_background.setNullTint()
             Glide.with(fragment_timeline_background)
                 .load(imageFile)
                 .into(fragment_timeline_background)
