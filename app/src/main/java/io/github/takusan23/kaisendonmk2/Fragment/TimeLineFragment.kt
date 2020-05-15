@@ -75,17 +75,16 @@ class TimeLineFragment : Fragment() {
 
     // 表示するタイムライン読み込み
     fun initAllTimeLine() {
-        // UIスレッドではない
-        GlobalScope.launch(Dispatchers.IO) {
-            // くるくる
-            withContext(Dispatchers.Main) {
-                timeLineItemDataList.clear()
-                timeLineAdapter.notifyDataSetChanged()
-                fragment_timeline_swipe?.isRefreshing = true
-            }
-            // 読み込む
-            val allTimeLineJSON = AllTimeLineJSON(context)
-            allTimeLineJSON.loadTimeLineSettingJSON().forEach { allTimeLineData ->
+        // くるくる
+        GlobalScope.launch(Dispatchers.Main) {
+            timeLineItemDataList.clear()
+            timeLineAdapter.notifyDataSetChanged()
+            fragment_timeline_swipe?.isRefreshing = true
+        }
+        // 読み込む
+        val allTimeLineJSON = AllTimeLineJSON(context)
+        allTimeLineJSON.loadTimeLineSettingJSON().forEach { allTimeLineData ->
+            GlobalScope.launch(Dispatchers.IO) {
                 // 有効時 で 通知以外
                 if (allTimeLineData.isEnable && allTimeLineData.timeLineLoad != "notification") {
                     if (allTimeLineData.service == "mastodon") {
@@ -119,39 +118,41 @@ class TimeLineFragment : Fragment() {
                         }
                     }
                 }
-            }
-            // 並び替え / 同じID排除 など
-            timeLineItemDataList.sortByDescending { timeLineItemData ->
-                when {
-                    timeLineItemData.statusData != null -> timeLineItemData.statusData.createdAt.toUnixTime()
-                    timeLineItemData.notificationData != null -> timeLineItemData.notificationData.createdAt.toUnixTime()
-                    timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.createdAt.toUnixTime()
-                    timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.createdAt.toUnixTime()
-                    else -> 0 // ここ来ることはまずありえない
+                // 並び替え / 同じID排除 など
+                timeLineItemDataList.sortByDescending { timeLineItemData ->
+                    when {
+                        timeLineItemData.statusData != null -> timeLineItemData.statusData.createdAt.toUnixTime()
+                        timeLineItemData.notificationData != null -> timeLineItemData.notificationData.createdAt.toUnixTime()
+                        timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.createdAt.toUnixTime()
+                        timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.createdAt.toUnixTime()
+                        else -> 0 // ここ来ることはまずありえない
+                    }
                 }
-            }
-            timeLineItemDataList = timeLineItemDataList.distinctBy { timeLineItemData ->
-                when {
-                    timeLineItemData.statusData != null -> timeLineItemData.statusData.id
-                    timeLineItemData.notificationData != null -> timeLineItemData.notificationData.notificationId
-                    timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.noteId
-                    timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.id
-                    else -> 0 // ここ来ることはまずありえない
-                }
-            } as ArrayList<TimeLineItemData>
-            // 重複対策
-            addedIdList = timeLineItemDataList.map { timeLineItemData ->
-                timeLineItemData.statusData?.id
-                    ?: timeLineItemData.notificationData?.notificationId
-                    ?: timeLineItemData.misskeyNoteData?.noteId
-                    ?: timeLineItemData.misskeyNotificationData?.id
-            } as ArrayList<String>
-            // UI反映
-            withContext(Dispatchers.Main) {
-                fragment_timeline_swipe?.isRefreshing = false
-                initRecyclerView()
-                if (::mainActivity.isInitialized) {
-                    mainActivity.showSnackBar("${getString(R.string.timeline_item_size)}：${timeLineItemDataList.size}")
+                timeLineItemDataList = timeLineItemDataList.distinctBy { timeLineItemData ->
+                    when {
+                        timeLineItemData.statusData != null -> timeLineItemData.statusData.id
+                        timeLineItemData.notificationData != null -> timeLineItemData.notificationData.notificationId
+                        timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.noteId
+                        timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.id
+                        else -> 0 // ここ来ることはまずありえない
+                    }
+                } as ArrayList<TimeLineItemData>
+                // 重複対策
+                addedIdList = timeLineItemDataList.map { timeLineItemData ->
+                    timeLineItemData.statusData?.id
+                        ?: timeLineItemData.notificationData?.notificationId
+                        ?: timeLineItemData.misskeyNoteData?.noteId
+                        ?: timeLineItemData.misskeyNotificationData?.id
+                } as ArrayList<String>
+                // UI反映
+                withContext(Dispatchers.Main) {
+                    if(timeLineItemDataList.isNotEmpty()) {
+                        fragment_timeline_swipe?.isRefreshing = false
+                        initRecyclerView()
+                        if (::mainActivity.isInitialized) {
+                            mainActivity.showSnackBar("${getString(R.string.timeline_item_size)}：${timeLineItemDataList.size}")
+                        }
+                    }
                 }
             }
         }
