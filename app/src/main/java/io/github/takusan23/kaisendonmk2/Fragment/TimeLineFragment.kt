@@ -139,33 +139,36 @@ class TimeLineFragment : Fragment() {
                         }
                     }
                 }
-            }
-            // 並び替え / 同じID排除 など
-            timeLineItemDataList.sortByDescending { timeLineItemData ->
-                when {
-                    timeLineItemData.statusData != null -> timeLineItemData.statusData.createdAt.toUnixTime()
-                    timeLineItemData.notificationData != null -> timeLineItemData.notificationData.createdAt.toUnixTime()
-                    timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.createdAt.toUnixTime()
-                    timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.createdAt.toUnixTime()
-                    else -> 0 // ここ来ることはまずありえない
+                // 同じID消す
+                timeLineItemDataList.sortByDescending { timeLineItemData ->
+                    when {
+                        timeLineItemData.statusData != null -> timeLineItemData.statusData.createdAt.toUnixTime()
+                        timeLineItemData.notificationData != null -> timeLineItemData.notificationData.createdAt.toUnixTime()
+                        timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.createdAt.toUnixTime()
+                        timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.createdAt.toUnixTime()
+                        else -> 0 // ここ来ることはまずありえない
+                    }
                 }
             }
-            timeLineItemDataList = timeLineItemDataList.distinctBy { timeLineItemData ->
-                when {
-                    timeLineItemData.statusData != null -> timeLineItemData.statusData.id
-                    timeLineItemData.notificationData != null -> timeLineItemData.notificationData.notificationId
-                    timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.noteId
-                    timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.id
-                    else -> 0 // ここ来ることはまずありえない
-                }
-            } as ArrayList<TimeLineItemData>
-            // 重複対策
-            addedIdList = timeLineItemDataList.map { timeLineItemData ->
-                timeLineItemData.statusData?.id
-                    ?: timeLineItemData.notificationData?.notificationId
-                    ?: timeLineItemData.misskeyNoteData?.noteId
-                    ?: timeLineItemData.misskeyNotificationData?.id
-            } as ArrayList<String>
+            withContext(Dispatchers.IO) {
+                // 並び替え
+                timeLineItemDataList = timeLineItemDataList.distinctBy { timeLineItemData ->
+                    when {
+                        timeLineItemData.statusData != null -> timeLineItemData.statusData.id
+                        timeLineItemData.notificationData != null -> timeLineItemData.notificationData.notificationId
+                        timeLineItemData.misskeyNoteData != null -> timeLineItemData.misskeyNoteData.noteId
+                        timeLineItemData.misskeyNotificationData != null -> timeLineItemData.misskeyNotificationData.id
+                        else -> 0 // ここ来ることはまずありえない
+                    }
+                } as ArrayList<TimeLineItemData>
+                // 重複対策
+                addedIdList = timeLineItemDataList.map { timeLineItemData ->
+                    timeLineItemData.statusData?.id
+                        ?: timeLineItemData.notificationData?.notificationId
+                        ?: timeLineItemData.misskeyNoteData?.noteId
+                        ?: timeLineItemData.misskeyNotificationData?.id
+                } as ArrayList<String>
+            }
             // UI反映
             withContext(Dispatchers.Main) {
                 if (timeLineItemDataList.isNotEmpty()) {
