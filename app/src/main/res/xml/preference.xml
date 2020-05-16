@@ -13,6 +13,12 @@
         android:summary="@string/setting_load_limit_misskey_description"
         android:title="@string/setting_load_limit_misskey_title" />
 
+    <EditTextPreference
+        android:defaultValue="2"
+        android:key="setting_tl_column"
+        android:summary="@string/setting_column_description"
+        android:title="@string/setting_column_title" />
+
     <Preference android:title="@string/license">
         <intent
             android:action="android.intent.action.MAIN"

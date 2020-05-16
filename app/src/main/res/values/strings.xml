@@ -84,4 +84,6 @@
     <string name="device_maker_name">Manufacture name</string>
     <string name="device_sdk_version">SDK version</string>
     <string name="device_info">Device information</string>
+    <string name="setting_column_title">Number that can be displayed next to the timeline</string>
+    <string name="setting_column_description">Default is 2</string>
 </resources>

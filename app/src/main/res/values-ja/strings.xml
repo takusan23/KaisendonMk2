@@ -85,4 +85,6 @@
     <string name="device_maker_name">メーカー名</string>
     <string name="device_sdk_version">SDKバージョン</string>
     <string name="device_info">端末情報</string>
+    <string name="setting_column_title">タイムラインの横に表示できる数</string>
+    <string name="setting_column_description">デフォルトは2です</string>
 </resources>

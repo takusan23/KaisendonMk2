@@ -51,6 +51,9 @@ class TimeLineFragment : Fragment() {
     // 追加済みID
     var addedIdList = arrayListOf<String>()
 
+    // 横に表示する量
+    var column = 2
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_timeline, container, false)
     }
@@ -270,13 +273,13 @@ class TimeLineFragment : Fragment() {
             GlobalScope.launch(Dispatchers.Main) {
                 if (fragment_timeline_recyclerview?.layoutManager is StaggeredGridLayoutManager) {
                     // 一番上にいれば一番上に追従する時に必要な値
-                    val intArray = IntArray(2)
+                    val intArray = IntArray(column)
                     val pos =
                         (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).findFirstVisibleItemPositions(intArray)
                     // タイムライン追加
                     timeLineItemDataList.add(0, timeLineItemData)
                     timeLineAdapter.notifyItemInserted(0)
-                    if (pos[0] == 0 || pos[1] == 0) {
+                    if (pos[0] == 0) {
                         // 一番上にいれば一番上に追従する
                         (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).scrollToPosition(0)
                     }
@@ -313,7 +316,8 @@ class TimeLineFragment : Fragment() {
         fragment_timeline_recyclerview?.apply {
             setHasFixedSize(true)
             // なんかかっこいいやつ
-            layoutManager = StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL)
+            column = prefSetting.getString("setting_tl_column", "2")?.toInt() ?: 2
+            layoutManager = StaggeredGridLayoutManager(column, StaggeredGridLayoutManager.VERTICAL)
             timeLineAdapter = TimelineRecyclerViewAdapter(timeLineItemDataList)
             if (::mainActivity.isInitialized) {
                 timeLineAdapter.mainActivity = mainActivity

@@ -16,7 +16,9 @@
         android:theme="@style/AppTheme">
         <activity android:name=".Activity.KonoAppActivity"></activity>
         <activity android:name=".Activity.LicenseActivity" />
-        <activity android:name=".Activity.PreferenceActivity" />
+        <activity
+            android:name=".Activity.PreferenceActivity"
+            android:label="@string/preference" />
         <activity android:name=".Activity.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
