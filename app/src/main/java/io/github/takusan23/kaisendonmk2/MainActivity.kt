@@ -180,7 +180,6 @@ class MainActivity : AppCompatActivity() {
                             noteAPI.notesCreate(statusText, postVisibility).await()
                         }
                     }
-                    println(response.body?.string())
                     // 帰ってきたらUIスレッドに戻る
                     if (response.isSuccessful) {
                         showSnackBar(getString(R.string.post_ok))
