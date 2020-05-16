@@ -1,13 +1,15 @@
 package io.github.takusan23.kaisendonmk2
 
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.telephony.TelephonyManager
 import android.view.View
 import android.view.animation.AnimationUtils
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
@@ -15,9 +17,10 @@ import androidx.preference.PreferenceManager
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.snackbar.Snackbar
 import io.github.takusan23.kaisendonmk2.Activity.LoginActivity
-import io.github.takusan23.kaisendonmk2.MastodonAPI.*
 import io.github.takusan23.kaisendonmk2.BottomFragment.DialogBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.MenuBottomSheet
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
@@ -25,15 +28,21 @@ import io.github.takusan23.kaisendonmk2.DataClass.MultiAccountData
 import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
+import io.github.takusan23.kaisendonmk2.MastodonAPI.AccountAPI
+import io.github.takusan23.kaisendonmk2.MastodonAPI.CustomEmojiAPI
+import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import io.github.takusan23.kaisendonmk2.MastodonAPI.StatusAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyAccountAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyEmojiAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyNoteAPI
+import io.github.takusan23.kaisendonmk2.TimeLine.DeviceInfo
 import io.github.takusan23.kaisendonmk2.TimeLine.isDarkMode
 import io.github.takusan23.kaisendonmk2.TimeLine.loadMultiAccount
 import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_timeline.*
 import kotlinx.coroutines.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -81,7 +90,6 @@ class MainActivity : AppCompatActivity() {
 
         // 投稿部分初期化
         initPostCard()
-
 
     }
 
@@ -149,6 +157,8 @@ class MainActivity : AppCompatActivity() {
             }
             showPostCard()
         }
+        // デバイス情報
+        initDeviceInfo()
         // 投稿ボタン
         activity_main_post.setOnClickListener {
             // 本当に投稿しても良い？
@@ -179,6 +189,38 @@ class MainActivity : AppCompatActivity() {
                     hidePostCard()
                 }
             }
+        }
+    }
+
+    private fun initDeviceInfo() {
+        activity_main_toot_device.setOnClickListener {
+            val items = arrayListOf<DialogBottomSheet.DialogBottomSheetItem>().apply {
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_mmc_nnc), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_carrier_name), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_carrier_country), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_signal_level), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_battery_level), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_android_version), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_device_name), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_maker_name), -1, -1))
+                add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.device_sdk_version), -1, -1))
+            }
+            val deviceInfo = DeviceInfo(this)
+            DialogBottomSheet(getString(R.string.device_info), items) { i, bottomSheetDialogFragment ->
+                val text = when (i) {
+                    0 -> deviceInfo.mobilePLMN
+                    1 -> deviceInfo.carrierName
+                    2 -> deviceInfo.countryISO
+                    3 -> deviceInfo.signalLevel.toString()
+                    4 -> deviceInfo.batteryLevel.toString()
+                    5 -> deviceInfo.version.toString()
+                    6 -> deviceInfo.name
+                    7 -> deviceInfo.maker
+                    8 -> deviceInfo.sdk.toString()
+                    else -> ""
+                }
+                activity_main_text_input.append("\n$text")
+            }.show(supportFragmentManager, "device")
         }
     }
 

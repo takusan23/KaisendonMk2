@@ -73,4 +73,15 @@
     <string name="setting_load_limit_misskey_description">Up to 100 cases can be acquired.</string>
     <string name="license">License</string>
     <string name="kono_app">About this app</string>
+    <string name="source_code">SourceCode</string>
+    <string name="device_mmc_nnc">Mobile carrier MMC + MNC</string>
+    <string name="device_carrier_name">Carrier name</string>
+    <string name="device_carrier_country">Country code</string>
+    <string name="device_signal_level">Signal strength</string>
+    <string name="device_battery_level">Battery level</string>
+    <string name="device_android_version">Android version</string>
+    <string name="device_device_name">Device name</string>
+    <string name="device_maker_name">Manufacture name</string>
+    <string name="device_sdk_version">SDK version</string>
+    <string name="device_info">Device information</string>
 </resources>

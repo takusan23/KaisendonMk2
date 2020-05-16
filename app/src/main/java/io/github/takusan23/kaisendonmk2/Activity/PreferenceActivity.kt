@@ -4,7 +4,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import io.github.takusan23.kaisendonmk2.Fragment.PreferenceFragment
 import io.github.takusan23.kaisendonmk2.R
-
+/**
+ * 設定画面。PreferenceFragment見てね。
+ * */
 class PreferenceActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

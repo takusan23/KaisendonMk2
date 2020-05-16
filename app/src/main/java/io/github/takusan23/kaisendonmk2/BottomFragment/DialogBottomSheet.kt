@@ -48,24 +48,23 @@ class DialogBottomSheet(val description: String, val buttonItems: List<DialogBot
             // 画像
             val imageView = layout.findViewById<ImageView>(R.id.dialog_layout_imageview)
             imageView.setNullTint()
-            when {
-                item.icon != -1 -> {
-                    // drawableから
-                    imageView.setImageDrawable(context?.getDrawable(item.icon))
-                }
-                item.imageUrl != "" -> {
-                    // オンライン上から
-                    Glide.with(imageView)
-                        .load(item.imageUrl)
-                        .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-                        .into(imageView)
-                }
-                item.textColor != -1 -> {
-                    // いろ
-                    textView.setTextColor(item.textColor)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        imageView.imageTintList = ColorStateList.valueOf(item.textColor)
-                    }
+            if (item.icon != -1) {
+                // drawableから
+                imageView.setImageDrawable(context?.getDrawable(item.icon))
+            } else if (item.imageUrl != "") {
+                // オンライン上から
+                Glide.with(imageView)
+                    .load(item.imageUrl)
+                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                    .into(imageView)
+            } else {
+                imageView.visibility = View.GONE
+            }
+            if (item.textColor != -1) {
+                // いろ
+                textView.setTextColor(item.textColor)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    imageView.imageTintList = ColorStateList.valueOf(item.textColor)
                 }
             }
             layout.setOnClickListener {

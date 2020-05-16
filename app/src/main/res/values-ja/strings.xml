@@ -74,4 +74,15 @@
     <string name="setting_load_limit_misskey_description">100件まで取得可能です。</string>
     <string name="license">ライセンス</string>
     <string name="kono_app">このアプリについて</string>
+    <string name="source_code">ソースコード</string>
+    <string name="device_mmc_nnc">携帯回線会社のMMC+MNC</string>
+    <string name="device_carrier_name">キャリア名</string>
+    <string name="device_carrier_country">国コード(ISO-3166)</string>
+    <string name="device_signal_level">信号強度</string>
+    <string name="device_battery_level">電池残量</string>
+    <string name="device_android_version">Androidバージョン</string>
+    <string name="device_device_name">端末名</string>
+    <string name="device_maker_name">メーカー名</string>
+    <string name="device_sdk_version">SDKバージョン</string>
+    <string name="device_info">端末情報</string>
 </resources>

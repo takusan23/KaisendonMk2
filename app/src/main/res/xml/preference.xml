@@ -13,8 +13,18 @@
         android:summary="@string/setting_load_limit_misskey_description"
         android:title="@string/setting_load_limit_misskey_title" />
 
-    <Preference android:title="@string/license" />
+    <Preference android:title="@string/license">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetClass="io.github.takusan23.kaisendonmk2.Activity.LicenseActivity"
+            android:targetPackage="io.github.takusan23.kaisendonmk2" />
+    </Preference>
 
-    <Preference android:title="@string/kono_app" />
+    <Preference android:title="@string/kono_app">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetClass="io.github.takusan23.kaisendonmk2.Activity.KonoAppActivity"
+            android:targetPackage="io.github.takusan23.kaisendonmk2" />
+    </Preference>
 
 </PreferenceScreen>
