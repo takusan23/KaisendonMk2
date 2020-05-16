@@ -17,15 +17,17 @@ class TimeLineAPI(val instanceToken: InstanceToken) {
 
     /**
      * ローカルTLを取得する関数。コルーチンです。
+     * @param limit 取得件数。４０まで
      * */
-    fun getLocalTimeLine(): Deferred<Response> =
-        timeLine("$BASE_URL/public?access_token=${instanceToken.token}&limit=40&local=true")
+    fun getLocalTimeLine(limit: Int = 40): Deferred<Response> =
+        timeLine("$BASE_URL/public?access_token=${instanceToken.token}&limit=$limit&local=true")
 
     /**
      * ホームタイムラインを取得
+     * @param limit 取得件数。４０まで
      * */
-    fun getHomeTimeLine(): Deferred<Response> =
-        timeLine("$BASE_URL/home?access_token=${instanceToken.token}&limit=40")
+    fun getHomeTimeLine(limit: Int = 40): Deferred<Response> =
+        timeLine("$BASE_URL/home?access_token=${instanceToken.token}&limit=$limit")
 
     // 共通部分
     private fun timeLine(url: String): Deferred<Response> = GlobalScope.async {

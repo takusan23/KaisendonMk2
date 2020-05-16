@@ -66,4 +66,11 @@
     <string name="timeline_setting_font_reset">Delete font settings</string>
     <string name="account_list">Account list</string>
     <string name="menu">Menu</string>
+    <string name="preference">Configuration</string>
+    <string name="setting_load_limit_mastodon_title">Number of items to be acquired with Mastodon</string>
+    <string name="setting_load_limit_mastodon_description">Up to 40 items can be acquired simultaneously.</string>
+    <string name="setting_load_limit_misskey_title">Number of records to be acquired at one time with Misskey</string>
+    <string name="setting_load_limit_misskey_description">Up to 100 cases can be acquired.</string>
+    <string name="license">License</string>
+    <string name="kono_app">About this app</string>
 </resources>

@@ -1,6 +1,6 @@
-package io.github.takusan23.kaisendonmk2.MastodonAPI
+package io.github.takusan23.kaisendonmk2.MisskeyAPI
 
-import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
+import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async

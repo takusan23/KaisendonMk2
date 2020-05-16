@@ -10,6 +10,7 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.github.takusan23.kaisendonmk2.Activity.LoginActivity
+import io.github.takusan23.kaisendonmk2.Activity.PreferenceActivity
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
 import io.github.takusan23.kaisendonmk2.MainActivity
@@ -63,10 +64,17 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
             startActivity(intent)
         }
 
+        // 設定
+        bottom_fragment_menu_setting.setOnClickListener {
+            val intent = Intent(context, PreferenceActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 
     private fun loadAccount() {
         GlobalScope.launch(Dispatchers.Main) {
+            bottom_fragment_menu_account.visibility = View.GONE
             // トークン一覧
             val tokenList = loadMultiAccount(context).map { instanceToken -> instanceToken.token }
             val accountTextList = withContext(Dispatchers.IO) {
@@ -88,6 +96,7 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
             } as ArrayList<DialogBottomSheet.DialogBottomSheetItem>
             // アカウント一覧
             if (isAdded) {
+                bottom_fragment_menu_account.visibility = View.VISIBLE
                 bottom_fragment_menu_account.setOnClickListener {
                     DialogBottomSheet(getString(R.string.account_list), accountTextList) { selectPos, bottomSheetDialogFragment ->
                         // 押したら削除など

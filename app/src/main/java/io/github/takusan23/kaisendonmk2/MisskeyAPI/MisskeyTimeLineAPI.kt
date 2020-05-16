@@ -27,29 +27,32 @@ class MisskeyTimeLineAPI(val instanceToken: InstanceToken) {
     /**
      * ホームタイムライン取得
      * */
-    fun getHomeNotesTimeLine(): Deferred<Response> = baseTimeLineAPI("notes/timeline")
+    fun getHomeNotesTimeLine(limit: Int = 100): Deferred<Response> =
+        baseTimeLineAPI("notes/timeline", limit)
 
     /**
      * ローカルタイムライン取得
      * */
-    fun getLocalNotesTimeLine(): Deferred<Response> = baseTimeLineAPI("notes/local-timeline")
+    fun getLocalNotesTimeLine(limit: Int = 100): Deferred<Response> =
+        baseTimeLineAPI("notes/local-timeline", limit)
 
     /**
      * 共通部分
      * */
-    private fun baseTimeLineAPI(url: String): Deferred<Response> = GlobalScope.async {
-        val postData = JSONObject().apply {
-            put("limit", 100)
-            put("i", instanceToken.token)
-        }.toString().toRequestBody(APPLICATON_JSON)
-        val request = Request.Builder().apply {
-            url("https://${instanceToken.instance}/api/$url")
-            header("User-Agent", USER_AGENT)
-            post(postData)
-        }.build()
-        val okHttpClient = OkHttpClient()
-        val response = okHttpClient.newCall(request).execute()
-        return@async response
-    }
+    private fun baseTimeLineAPI(url: String, limit: Int = 100): Deferred<Response> =
+        GlobalScope.async {
+            val postData = JSONObject().apply {
+                put("limit", limit)
+                put("i", instanceToken.token)
+            }.toString().toRequestBody(APPLICATON_JSON)
+            val request = Request.Builder().apply {
+                url("https://${instanceToken.instance}/api/$url")
+                header("User-Agent", USER_AGENT)
+                post(postData)
+            }.build()
+            val okHttpClient = OkHttpClient()
+            val response = okHttpClient.newCall(request).execute()
+            return@async response
+        }
 
 }

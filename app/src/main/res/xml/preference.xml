@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:defaultValue="40"
+        android:key="setting_load_limit_mastodon"
+        android:summary="@string/setting_load_limit_mastodon_description"
+        android:title="@string/setting_load_limit_mastodon_title" />
+
+    <EditTextPreference
+        android:defaultValue="100"
+        android:key="setting_load_limit_misskey"
+        android:summary="@string/setting_load_limit_misskey_description"
+        android:title="@string/setting_load_limit_misskey_title" />
+
+    <Preference android:title="@string/license" />
+
+    <Preference android:title="@string/kono_app" />
+
+</PreferenceScreen>

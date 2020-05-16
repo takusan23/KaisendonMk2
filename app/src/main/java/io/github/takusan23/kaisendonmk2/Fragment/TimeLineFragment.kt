@@ -96,13 +96,17 @@ class TimeLineFragment : Fragment() {
                     // 有効時 で 通知以外
                     if (allTimeLineData.isEnable && allTimeLineData.timeLineLoad != "notification") {
                         if (allTimeLineData.service == "mastodon") {
+                            // 取得件数
+                            val limit =
+                                prefSetting.getString("setting_load_limit_mastodon", "40")?.toInt()
+                                    ?: 40
                             // TL取得
                             val timeLineAPI = TimeLineAPI(allTimeLineData.instanceToken)
                             val timeLineParser = TimeLineParser()
                             val response = when (allTimeLineData.timeLineLoad) {
-                                "home" -> timeLineAPI.getHomeTimeLine().await().body?.string()
-                                "local" -> timeLineAPI.getLocalTimeLine().await().body?.string()
-                                else -> timeLineAPI.getHomeTimeLine().await().body?.string()
+                                "home" -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
+                                "local" -> timeLineAPI.getLocalTimeLine(limit).await().body?.string()
+                                else -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
                             }
                             // 追加
                             timeLineParser.parseTL(response, allTimeLineData.instanceToken).forEach { statusData ->
@@ -111,13 +115,17 @@ class TimeLineFragment : Fragment() {
                             }
                         } else {
                             // Misskey TL取得
+                            // 取得件数
+                            val limit =
+                                prefSetting.getString("setting_load_limit_misskey", "100")?.toInt()
+                                    ?: 100
                             val misskeyTimeLineAPI =
                                 MisskeyTimeLineAPI(allTimeLineData.instanceToken)
                             val misskeyParser = MisskeyParser()
                             val response = when (allTimeLineData.timeLineLoad) {
-                                "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine().await().body?.string()
-                                "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine().await().body?.string()
-                                else -> misskeyTimeLineAPI.getHomeNotesTimeLine().await().body?.string()
+                                "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
+                                "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await().body?.string()
+                                else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
                             }
                             // 追加
                             misskeyParser.parseTimeLine(response, allTimeLineData.instanceToken).forEach { misskeyNoteData ->
