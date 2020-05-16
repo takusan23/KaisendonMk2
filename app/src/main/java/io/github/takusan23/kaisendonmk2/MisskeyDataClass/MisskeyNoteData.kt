@@ -2,6 +2,7 @@ package io.github.takusan23.kaisendonmk2.MisskeyDataClass
 
 import io.github.takusan23.kaisendonmk2.DataClass.EmojiData
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import java.io.Serializable
 
 /**
  * MisskeyのNoteのデータクラス
@@ -19,4 +20,4 @@ data class MisskeyNoteData(
     val renote: MisskeyNoteData? = null,
     var isRenote: Boolean = false, // APIにはない。
     var isReaction: Boolean = false // APIにはない。
-)
+) : Serializable

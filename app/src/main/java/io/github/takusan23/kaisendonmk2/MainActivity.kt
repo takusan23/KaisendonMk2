@@ -76,11 +76,14 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-
         // タイムラインFragment
-        val fragment = TimeLineFragment()
+        val fragment = if (supportFragmentManager.findFragmentByTag("timeline_fragment") == null) {
+            TimeLineFragment()
+        } else {
+            supportFragmentManager.findFragmentByTag("timeline_fragment")!! as TimeLineFragment
+        }
         fragment.mainActivity = this
-        supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment).commit()
+        supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment, "timeline_fragment").commit()
 
         // メニュー初期化
         initMenu()

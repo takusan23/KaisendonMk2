@@ -1,6 +1,7 @@
 package io.github.takusan23.kaisendonmk2.DataClass
 
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import java.io.Serializable
 
 // 通知のデータクラス
 data class NotificationData(
@@ -10,4 +11,4 @@ data class NotificationData(
     val accountData: AccountData,
     val status: StatusData?, // フォロー通知の場合はnullです。
     val type: String
-)
+) : Serializable

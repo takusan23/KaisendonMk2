@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
+import java.io.Serializable
 
 class TimeLineFragment : Fragment() {
 
@@ -58,6 +59,10 @@ class TimeLineFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_timeline, container, false)
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -71,7 +76,19 @@ class TimeLineFragment : Fragment() {
             setTimeLineBackgroundImage()
             setFont()
 
-            initAllTimeLine()
+            // 画面回転時
+            if (savedInstanceState != null) {
+                ArrayList(savedInstanceState.getSerializable("list") as ArrayList<TimeLineItemData>).forEach {
+                    timeLineItemDataList.add(it)
+                }
+                timeLineAdapter.notifyDataSetChanged()
+            } else {
+                // 初回実行時
+                if (timeLineItemDataList.isEmpty()) {
+                    initAllTimeLine()
+                }
+            }
+
             initAllTimeLineStreaming()
 
             fragment_timeline_swipe.setOnRefreshListener {
@@ -85,6 +102,7 @@ class TimeLineFragment : Fragment() {
 
     // 表示するタイムライン読み込み
     fun initAllTimeLine() {
+        println("あれ")
         // くるくる
         GlobalScope.launch(Dispatchers.Main) {
             timeLineItemDataList.clear()
@@ -328,6 +346,15 @@ class TimeLineFragment : Fragment() {
             adapter = timeLineAdapter
         }
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // 保存する
+        outState.apply {
+            putSerializable("list", timeLineItemDataList)
+        }
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()

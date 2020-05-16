@@ -1,6 +1,7 @@
 package io.github.takusan23.kaisendonmk2.DataClass
 
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import java.io.Serializable
 
 // アカウント関係
 data class AccountData(
@@ -21,4 +22,4 @@ data class AccountData(
     val lastStatusAt: String,
     val fields: ArrayList<FieldsData>,
     val allEmoji: ArrayList<EmojiData>
-)
+): Serializable

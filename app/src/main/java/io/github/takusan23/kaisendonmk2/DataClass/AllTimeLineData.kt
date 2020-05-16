@@ -1,6 +1,7 @@
 package io.github.takusan23.kaisendonmk2.DataClass
 
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import java.io.Serializable
 
 /**
  * 表示するタイムラインデータクラス
@@ -13,4 +14,4 @@ data class AllTimeLineData(
     var timeLineBackground: String,     // タイムラインのCardViewの背景色
     var timeLineTextColor: String,      // 文字色
     var isEnable: Boolean               // 有効にするか
-)
+) : Serializable

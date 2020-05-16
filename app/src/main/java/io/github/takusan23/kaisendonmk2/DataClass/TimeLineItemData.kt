@@ -2,6 +2,7 @@ package io.github.takusan23.kaisendonmk2.DataClass
 
 import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
 import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNotificationData
+import java.io.Serializable
 
 /**
  * RecyclerViewに渡すデータクラス
@@ -16,4 +17,4 @@ data class TimeLineItemData(
     val notificationData: NotificationData? = null,// null以外なら通知表示
     val misskeyNoteData: MisskeyNoteData? = null, // null以外ならNote表示
     val misskeyNotificationData: MisskeyNotificationData? = null // null以外なら通知表示
-)
+) : Serializable

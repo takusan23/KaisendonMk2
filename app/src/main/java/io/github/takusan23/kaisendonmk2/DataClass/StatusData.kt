@@ -1,6 +1,7 @@
 package io.github.takusan23.kaisendonmk2.DataClass
 
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import java.io.Serializable
 
 // タイムラインのデータ
 data class StatusData(
@@ -19,4 +20,4 @@ data class StatusData(
     val card: CardData?,
     val allEmoji: ArrayList<EmojiData>,
     val reblogStatusData: StatusData? = null
-)
+) : Serializable
