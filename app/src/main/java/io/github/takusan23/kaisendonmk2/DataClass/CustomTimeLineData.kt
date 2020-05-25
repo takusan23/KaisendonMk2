@@ -6,7 +6,7 @@ import java.io.Serializable
 /**
  * 表示するタイムラインデータクラス
  * */
-data class AllTimeLineData(
+data class CustomTimeLineData(
     val instanceToken: InstanceToken,   // ログイン情報
     val service: String,                // mastodonしか無い（現状）
     val timeLineName: String,           // タイムライン名

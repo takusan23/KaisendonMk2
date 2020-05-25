@@ -8,19 +8,16 @@ import android.os.Bundle
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
+import androidx.room.Room
 import io.github.takusan23.kaisendonmk2.MastodonAPI.AppsAPI
-import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
-import io.github.takusan23.kaisendonmk2.DataClass.AllTimeLineData
 import io.github.takusan23.kaisendonmk2.DataClass.AppData
+import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
+import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB
 import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyLoginAPI
 import io.github.takusan23.kaisendonmk2.R
-import io.github.takusan23.kaisendonmk2.TimeLine.AllTimeLineJSON
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -114,7 +111,7 @@ class LoginActivity : AppCompatActivity() {
                     // 保存。
                     saveAccount(instance, accessToken, "misskey")
                     // AllTimeLine追加
-                    saveAllTimeLine(instance, accessToken, "misskey")
+                    saveCustomMenuTimeLine(instance, accessToken, "misskey").await()
                     // MainActivity
                     val intent = Intent(this@LoginActivity, MainActivity::class.java)
                     startActivity(intent)
@@ -123,8 +120,7 @@ class LoginActivity : AppCompatActivity() {
                     // コード
                     val code = intent.data!!.getQueryParameter("code") ?: return@launch
                     // アプリ作成時のデータ
-                    val instanceName =
-                        prefSetting.getString("register_instance", "") ?: return@launch
+                    val instanceName = prefSetting.getString("register_instance", "") ?: return@launch
                     val clientId = prefSetting.getString("client_id", "") ?: return@launch
                     val clientSecret = prefSetting.getString("client_secret", "") ?: return@launch
                     val redirectUrl = prefSetting.getString("redirect_url", "") ?: return@launch
@@ -137,7 +133,7 @@ class LoginActivity : AppCompatActivity() {
                     // 保存。
                     saveAccount(instanceName, token)
                     // AllTimeLine追加
-                    saveAllTimeLine(instanceName, token)
+                    saveCustomMenuTimeLine(instanceName, token).await()
                     // MainActivity
                     val intent = Intent(this@LoginActivity, MainActivity::class.java)
                     startActivity(intent)
@@ -146,32 +142,39 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    // AllTimeLineの設定
-    private fun saveAllTimeLine(instanceName: String, token: String, service: String = "mastodon") {
-        // 今までのAllTimeLineの配列
-        val allTimeLineJSON = AllTimeLineJSON(this)
-        val list = allTimeLineJSON.loadTimeLineSettingJSON()
-        // ログイン情報
-        val instanceToken = InstanceToken(instanceName, token, service)
-        // URLと名前
-        val nameList =
-            arrayListOf(getString(R.string.home), getString(R.string.notification), getString(R.string.local_tl))
-        val urlList = arrayListOf("home", "notification", "local")
-        repeat(3) {
-            // AllTimeLineDataのオブジェクト
-            val allTimeLineData = AllTimeLineData(
-                instanceToken,
-                service,
-                "${nameList[it]} | $instanceName",
-                urlList[it],
-                "",
-                "",
-                false
-            )
-            list.add(allTimeLineData)
+    // カスタムTLに追加
+    private fun saveCustomMenuTimeLine(instanceName: String, token: String, service: String = "mastodon") = GlobalScope.async {
+        GlobalScope.launch {
+            val db = Room.databaseBuilder(applicationContext, CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
+            val customTimeLineDBDao = db.customTimeLineDBDao()
+            // URLと名前
+            val nameList = arrayListOf(getString(R.string.home), getString(R.string.notification), getString(R.string.local_tl))
+            val urlList = arrayListOf("home", "notification", "local")
+            // TL追加
+            repeat(3) {
+                // timelineのJSON
+                val jsonObject = JSONObject().apply {
+                    put("instance", instanceName)
+                    put("token", token)
+                    put("service", service)
+                    put("load_tl", urlList[it])
+                    put("background_color", "")
+                    put("text_color", "")
+                    put("is_enable", false)
+                    put("name", "${nameList[it]} | $instanceName")
+                }
+                // DBに追加
+                val customTimeLineDBEntity = CustomTimeLineDBEntity(
+                    name = "${nameList[it]} | $instanceName",
+                    instance = instanceName,
+                    token = token,
+                    timeline = jsonObject.toString(),
+                    isEnable = false,
+                    service = service
+                )
+                customTimeLineDBDao.insert(customTimeLineDBEntity)
+            }
         }
-        // 保存
-        allTimeLineJSON.saveTimeLineSettingJSON(list)
     }
 
     private fun saveAccount(instanceName: String, token: String, service: String = "mastodon") {

@@ -5,24 +5,29 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.room.Room
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import io.github.takusan23.kaisendonmk2.Adapter.AllTimeLineAdapter
-import io.github.takusan23.kaisendonmk2.DataClass.AllTimeLineData
+import io.github.takusan23.kaisendonmk2.Adapter.CustomTimeLineItemsListAdapter
+import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
+import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB
 import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.R
-import io.github.takusan23.kaisendonmk2.TimeLine.AllTimeLineJSON
 import kotlinx.android.synthetic.main.bottom_fragment_load_timeline_list.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 読み込むTLの一覧
  * */
 class LoadTimeLineListBottomSheet : BottomSheetDialogFragment() {
 
-    lateinit var allTimeLineAdapter: AllTimeLineAdapter
+    lateinit var customTimeLineItemsListAdapter: CustomTimeLineItemsListAdapter
     lateinit var mainActivity: MainActivity
 
     // タイムラインの構成一覧
-    val timeLineSettingDataList = arrayListOf<AllTimeLineData>()
+    val timeLineSettingDataList = arrayListOf<CustomTimeLineDBEntity>()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.bottom_fragment_load_timeline_list, container, false)
@@ -39,23 +44,26 @@ class LoadTimeLineListBottomSheet : BottomSheetDialogFragment() {
     }
 
     // タイムラインの構成一覧読み込む
-    fun loadTimeLineSettingList() {
-        timeLineSettingDataList.clear()
-        val timeLineSettingJSON = AllTimeLineJSON(context)
-        timeLineSettingJSON.loadTimeLineSettingJSON().forEach {
-            timeLineSettingDataList.add(it)
+    private fun loadTimeLineSettingList() {
+        GlobalScope.launch(Dispatchers.Main) {
+            withContext(Dispatchers.IO) {
+                val db = Room.databaseBuilder(requireContext(), CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
+                db.customTimeLineDBDao().getAll().forEach {
+                    timeLineSettingDataList.add(it)
+                }
+            }
+            customTimeLineItemsListAdapter.notifyDataSetChanged()
         }
-        allTimeLineAdapter.notifyDataSetChanged()
     }
 
     private fun initRecyclerView() {
         bottom_fragment_timeline_setting_list_recyclerview.apply {
             setHasFixedSize(true)
             layoutManager = LinearLayoutManager(context)
-            allTimeLineAdapter = AllTimeLineAdapter(timeLineSettingDataList)
-            allTimeLineAdapter.mainActivity = mainActivity
-            allTimeLineAdapter.loadTimeLineListBottomSheet = this@LoadTimeLineListBottomSheet
-            adapter = allTimeLineAdapter
+            customTimeLineItemsListAdapter = CustomTimeLineItemsListAdapter(timeLineSettingDataList)
+            customTimeLineItemsListAdapter.mainActivity = mainActivity
+            customTimeLineItemsListAdapter.loadTimeLineListBottomSheet = this@LoadTimeLineListBottomSheet
+            adapter = customTimeLineItemsListAdapter
         }
     }
 

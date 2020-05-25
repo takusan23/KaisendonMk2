@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.github.takusan23.kaisendonmk2.Activity.LoginActivity
@@ -17,7 +16,6 @@ import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.MastodonAPI.AccountAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyAccountAPI
 import io.github.takusan23.kaisendonmk2.R
-import io.github.takusan23.kaisendonmk2.TimeLine.AllTimeLineJSON
 import io.github.takusan23.kaisendonmk2.TimeLine.loadMultiAccount
 import kotlinx.android.synthetic.main.bottom_fragment_menu.*
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +54,7 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
         }
 
         // アカウント一覧読み込む
-        loadAccount()
+
 
         // ログイン
         bottom_fragment_menu_login.setOnClickListener {
@@ -98,6 +96,7 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
             if (isAdded) {
                 bottom_fragment_menu_account.visibility = View.VISIBLE
                 bottom_fragment_menu_account.setOnClickListener {
+/*
                     DialogBottomSheet(getString(R.string.account_list), accountTextList) { selectPos, bottomSheetDialogFragment ->
                         // 押したら削除など
                         val items = arrayListOf<DialogBottomSheet.DialogBottomSheetItem>().apply {
@@ -123,6 +122,7 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
                             }
                         }.show(childFragmentManager, "delete")
                     }.show(childFragmentManager, "account")
+*/
                 }
             }
         }

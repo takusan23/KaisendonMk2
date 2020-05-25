@@ -6,13 +6,13 @@ import java.io.Serializable
 
 /**
  * RecyclerViewに渡すデータクラス
- * @param allTimeLineData 色つけたりするから；；
+ * @param customTimeLineData 色つけたりするから；；
  * どっちか一個だけ入れろ↓。
  * @param statusData
  * @param notificationData
  * */
 data class TimeLineItemData(
-    val allTimeLineData: AllTimeLineData,
+    val customTimeLineData: CustomTimeLineData,
     val statusData: StatusData? = null, // null以外ならTL表示
     val notificationData: NotificationData? = null,// null以外なら通知表示
     val misskeyNoteData: MisskeyNoteData? = null, // null以外ならNote表示
