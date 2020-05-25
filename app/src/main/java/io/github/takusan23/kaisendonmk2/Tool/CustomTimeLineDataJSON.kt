@@ -22,7 +22,6 @@ class CustomTimeLineDataJSON {
         val service = timelineJSON.getString("service")
         val backgroundColor = timelineJSON.getString("background_color")
         val textColor = timelineJSON.getString("text_color")
-        val isEnable = timelineJSON.getBoolean("is_enable")
         val name = timelineJSON.getString("name")
         return CustomTimeLineData(
             instanceToken = InstanceToken(instance = instanceName, token = token, service = service),
@@ -30,8 +29,7 @@ class CustomTimeLineDataJSON {
             timeLineName = name,
             timeLineLoad = loadTL,
             timeLineBackground = backgroundColor,
-            timeLineTextColor = textColor,
-            isEnable = false
+            timeLineTextColor = textColor
         )
     }
 

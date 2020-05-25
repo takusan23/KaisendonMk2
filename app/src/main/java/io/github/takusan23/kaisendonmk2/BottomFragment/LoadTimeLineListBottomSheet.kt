@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.internal.UTC
 
 /**
  * 読み込むTLの一覧
@@ -25,6 +26,7 @@ class LoadTimeLineListBottomSheet : BottomSheetDialogFragment() {
 
     lateinit var customTimeLineItemsListAdapter: CustomTimeLineItemsListAdapter
     lateinit var mainActivity: MainActivity
+    lateinit var customTimeLineDB: CustomTimeLineDB
 
     // タイムラインの構成一覧
     val timeLineSettingDataList = arrayListOf<CustomTimeLineDBEntity>()
@@ -45,14 +47,14 @@ class LoadTimeLineListBottomSheet : BottomSheetDialogFragment() {
 
     // タイムラインの構成一覧読み込む
     private fun loadTimeLineSettingList() {
-        GlobalScope.launch(Dispatchers.Main) {
-            withContext(Dispatchers.IO) {
-                val db = Room.databaseBuilder(requireContext(), CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
-                db.customTimeLineDBDao().getAll().forEach {
-                    timeLineSettingDataList.add(it)
-                }
+        GlobalScope.launch(Dispatchers.IO) {
+            customTimeLineDB = Room.databaseBuilder(requireContext(), CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
+            customTimeLineDB.customTimeLineDBDao().getAll().forEach {
+                timeLineSettingDataList.add(it)
             }
-            customTimeLineItemsListAdapter.notifyDataSetChanged()
+            withContext(Dispatchers.Main) {
+                customTimeLineItemsListAdapter.notifyDataSetChanged()
+            }
         }
     }
 

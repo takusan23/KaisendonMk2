@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.text.HtmlCompat
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -121,8 +123,10 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         timeLineItemDataList.get(position).customTimeLineData.timeLineName
                     // トゥート表示
                     idTextView.text = "@${status.accountData.acct}"
+                    // 文字の最後に謎の改行ができる問題を治す
+                    val content = status.content.replace("<p>", "").replace("<p/>", "")
                     customEmoji.setCustomEmoji(nameTextView, status.accountData.displayName, status.accountData.allEmoji)
-                    customEmoji.setCustomEmoji(contentTextView, status.content, status.allEmoji)
+                    customEmoji.setCustomEmoji(contentTextView, content, status.allEmoji)
                     avatarImageView.setNullTint()
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, status.accountData.avatar)
@@ -220,6 +224,12 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     avatarImageView.setNullTint()
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, status.user.avatarUrl)
+                    // リアクション無いとき（かなしいのだわ）TextView非表示
+                    if (status.reaction.isEmpty()) {
+                        reactionTextView.visibility = View.GONE
+                    } else {
+                        reactionTextView.visibility = View.VISIBLE
+                    }
                     // リアクション、りのーと
                     reactionTextView.setText(status.reaction.joinToString(separator = " | ") { misskeyReactionData -> "${misskeyReactionData.reaction}:${misskeyReactionData.reactionCount}" })
                     initMisskeyFav(favoutiteButton, status)
@@ -354,11 +364,11 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
             } else {
                 setStrokeColor(ColorStateList.valueOf(Color.parseColor("#757575")))
             }
-             if (isDarkMode(context)) {
-                 setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#000000")))
-             } else {
-                 setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#ffffff")))
-             }
+            if (isDarkMode(context)) {
+                setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#000000")))
+            } else {
+                setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#ffffff")))
+            }
             alpha = 0.8F
         }
     }

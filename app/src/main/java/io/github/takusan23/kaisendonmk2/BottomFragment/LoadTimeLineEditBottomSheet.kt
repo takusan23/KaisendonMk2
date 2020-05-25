@@ -32,32 +32,31 @@ class LoadTimeLineEditBottomSheet : BottomSheetDialogFragment() {
         // データベース
         val customTimeLineDB = Room.databaseBuilder(requireContext(), CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
         val dao = customTimeLineDB.customTimeLineDBDao()
-        val item = dao.getAll().find { allTimeLineData -> allTimeLineData.name == timelineName } ?: return
-        val timeLineData = item.timeline ?: return
-
-        // もとの値セット
-        bottom_fragment_load_timeline_edit_background.setText(JSONObject(timeLineData).getString("background_color"))
-        bottom_fragment_load_timeline_edit_text_color.setText(JSONObject(timeLineData).getString("text_color"))
-
-        // 保存ボタン
-        bottom_fragment_load_timeline_edit_save.setOnClickListener {
-            // JSON再構成
-            val backgroundColor = bottom_fragment_load_timeline_edit_background.text.toString()
-            val textColor = bottom_fragment_load_timeline_edit_text_color.text.toString()
-            val timeLineJSON = JSONObject(timeLineData).apply {
-                remove("background_color")
-                remove("text_color")
-                put("background_color", backgroundColor)
-                put("text_color", textColor)
-            }.toString()
-            // 更新
-            GlobalScope.launch {
-                item.timeline = timeLineJSON
-                dao.update(item)
+        // RoomはUIスレッドでは呼べないので
+        GlobalScope.launch {
+            val item = dao.getAll().find { allTimeLineData -> allTimeLineData.name == timelineName } ?: return@launch
+            val timeLineData = item.timeline ?: return@launch
+            // もとの値セット
+            bottom_fragment_load_timeline_edit_background.setText(JSONObject(timeLineData).getString("background_color"))
+            bottom_fragment_load_timeline_edit_text_color.setText(JSONObject(timeLineData).getString("text_color"))
+            // 保存ボタン
+            bottom_fragment_load_timeline_edit_save.setOnClickListener {
+                // JSON再構成
+                val backgroundColor = bottom_fragment_load_timeline_edit_background.text.toString()
+                val textColor = bottom_fragment_load_timeline_edit_text_color.text.toString()
+                val timeLineJSON = JSONObject(timeLineData).apply {
+                    remove("background_color")
+                    remove("text_color")
+                    put("background_color", backgroundColor)
+                    put("text_color", textColor)
+                }.toString()
+                // 更新
+                GlobalScope.launch {
+                    item.timeline = timeLineJSON
+                    dao.update(item)
+                }
+                dismiss()
             }
-            dismiss()
         }
-
     }
-
 }

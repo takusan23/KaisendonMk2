@@ -8,7 +8,7 @@ import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
  * */
 @Dao
 interface CustomTimeLineDBDao {
-    
+
     @Query("SELECT * FROM CustomTimeLineDBEntity")
     fun getAll(): List<CustomTimeLineDBEntity>
 
@@ -25,6 +25,9 @@ interface CustomTimeLineDBDao {
      * 指定したアカウント（アクセストークン）のカスタムタイムラインを消す
      * */
     @Query("DELETE FROM CustomTimeLineDBEntity WHERE token = :token")
-    fun accountDelete(token:String)
+    fun accountDelete(token: String)
+
+    @Query("SELECT * FROM CustomTimeLineDBEntity WHERE id = :id")
+    fun findById(id: Int): CustomTimeLineDBEntity
 
 }

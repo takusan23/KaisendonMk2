@@ -15,8 +15,10 @@ import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
 import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB
 import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.R
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * タイムラインの構成一覧表示のAdapter
@@ -53,11 +55,16 @@ class CustomTimeLineItemsListAdapter(val customTimeLineList: ArrayList<CustomTim
 
             // スイッチ
             allTimeLineAdapterSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-                // 有効/無効を反転
-                val data = customTimeLineList[position]
-                data.isEnable = !data.isEnable
-                GlobalScope.launch {
-                    customTimeLineDBDao.update(data)
+                // なんと isPressed を使うことでなにもしてないのにリスナーが動いた時でも大丈夫（リサイクラービューは使い回されるので）
+                if (buttonView.isPressed) {
+                    // 有効/無効を反転
+                    customTimeLineList[position].isEnable = isChecked
+                    GlobalScope.launch {
+                        val db = Room.databaseBuilder(context, CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
+                        val item = db.customTimeLineDBDao().findById(allTimeLineData.id)
+                        item.isEnable = isChecked
+                        customTimeLineDBDao.update(item)
+                    }
                 }
             }
 
