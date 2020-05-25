@@ -251,6 +251,7 @@ class TimeLineFragment : Fragment() {
                                 addStreamingTLItem(TimeLineItemData(timeLineData, statusData))
                             }
                         }
+                        streamingAPIList.add(streamingAPI)
                     } else {
                         // Misskey
                         val misskeyStreamingAPI = MisskeyStreamingAPI(timeLineData.instanceToken)
