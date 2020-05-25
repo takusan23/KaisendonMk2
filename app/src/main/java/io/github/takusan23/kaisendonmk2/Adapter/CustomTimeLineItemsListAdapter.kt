@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import io.github.takusan23.kaisendonmk2.BottomFragment.LoadTimeLineEditBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.LoadTimeLineListBottomSheet
-import io.github.takusan23.kaisendonmk2.DataClass.CustomTimeLineData
 import io.github.takusan23.kaisendonmk2.DetaBase.Dao.CustomTimeLineDBDao
 import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
 import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB

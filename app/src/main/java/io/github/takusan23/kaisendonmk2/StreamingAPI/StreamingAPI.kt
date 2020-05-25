@@ -32,15 +32,13 @@ class StreamingAPI(val instanceToken: InstanceToken) {
      * ローカルタイムラインのStreamingAPIに接続する
      * @param onMessage 新しい投稿があれば流れてきます。
      * */
-    fun streamingLocalTL(receiveMessage: (StatusData) -> Unit) =
-        streaming("$BASE_URL&stream=public:local", receiveMessage)
+    fun streamingLocalTL(receiveMessage: (StatusData) -> Unit) = streaming("$BASE_URL&stream=public:local", receiveMessage)
 
     /**
      * 連合TLに接続する
      * @param receiveMessage 新しい投稿があれば流れてきます。
      * */
-    fun streamingPublicTL(receiveMessage: (StatusData) -> Unit) =
-        streaming("$BASE_URL&stream=public", receiveMessage)
+    fun streamingPublicTL(receiveMessage: (StatusData) -> Unit) = streaming("$BASE_URL&stream=public", receiveMessage)
 
     /**
      * ホームTLと通知に接続する。通知も流れてきます。

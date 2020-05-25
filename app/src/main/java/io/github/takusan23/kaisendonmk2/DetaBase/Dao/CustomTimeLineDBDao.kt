@@ -21,4 +21,10 @@ interface CustomTimeLineDBDao {
     @Delete
     fun delete(customTimeLineDBEntity: CustomTimeLineDBEntity)
 
+    /**
+     * 指定したアカウント（アクセストークン）のカスタムタイムラインを消す
+     * */
+    @Query("DELETE FROM CustomTimeLineDBEntity WHERE token = :token")
+    fun accountDelete(token:String)
+
 }

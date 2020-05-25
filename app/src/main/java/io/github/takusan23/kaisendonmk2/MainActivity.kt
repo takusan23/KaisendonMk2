@@ -70,20 +70,19 @@ class MainActivity : AppCompatActivity() {
         prefSetting = PreferenceManager.getDefaultSharedPreferences(this)
 
         // ログイン情報ない
-        if (prefSetting.getString("account_json", null) == null) {
+        if (prefSetting.getString("account_json", null) == null || prefSetting.getString("account_json", null) == "[]") {
             val intent = Intent(this, LoginActivity::class.java)
             startActivity(intent)
             return
         }
 
-        // タイムラインFragment
-        val fragment = if (supportFragmentManager.findFragmentByTag("timeline_fragment") == null) {
-            TimeLineFragment()
-        } else {
-            supportFragmentManager.findFragmentByTag("timeline_fragment")!! as TimeLineFragment
+        // 画面回転時はFragment作らない
+        if (savedInstanceState == null) {
+            // タイムラインFragment
+            val fragment = TimeLineFragment()
+            fragment.mainActivity = this
+            supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment, "timeline_fragment").commit()
         }
-        fragment.mainActivity = this
-        supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment, "timeline_fragment").commit()
 
         // メニュー初期化
         initMenu()
@@ -342,6 +341,7 @@ class MainActivity : AppCompatActivity() {
             prefSetting.edit { putString("last_use_account", accountList[position].title) }
             initEmoji().await()
         }
+
         // 最後に使ったアカウントが記録されてるか
         val lastUseAccount = prefSetting.getString("last_use_account", null)
         if (lastUseAccount == null) {

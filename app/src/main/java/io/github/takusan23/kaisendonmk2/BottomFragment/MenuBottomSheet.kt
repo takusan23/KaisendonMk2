@@ -54,7 +54,10 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
         }
 
         // アカウント一覧読み込む
-
+        bottom_fragment_menu_account.setOnClickListener {
+            val accountListBottomFragment = AccountListBottomFragment()
+            accountListBottomFragment.show(childFragmentManager, "account_list")
+        }
 
         // ログイン
         bottom_fragment_menu_login.setOnClickListener {

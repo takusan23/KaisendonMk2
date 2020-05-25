@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.preference.PreferenceManager
@@ -21,6 +22,9 @@ import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
 
+/**
+ * ログイン画面
+ * */
 class LoginActivity : AppCompatActivity() {
 
     lateinit var prefSetting: SharedPreferences
@@ -36,6 +40,10 @@ class LoginActivity : AppCompatActivity() {
 
         // ログインする
         activity_login_login.setOnClickListener {
+            // くるくる出して代わりにボタン消す
+            activity_login_progress.visibility = View.VISIBLE
+            it.visibility = View.GONE
+            // 値取り出す
             val instanceName = activity_login_instance.text.toString()
             val viaName = activity_login_via.text.toString()
             GlobalScope.launch(Dispatchers.Main) {
@@ -80,8 +88,7 @@ class LoginActivity : AppCompatActivity() {
                         putString("register_instance", instanceName)
                     }
                     // 認証画面出す
-                    val url =
-                        Uri.parse("https://$instanceName/oauth/authorize?client_id=${data.clientId}&redirect_uri=${data.redirectUrl}&response_type=code&scope=read%20write%20follow")
+                    val url = Uri.parse("https://$instanceName/oauth/authorize?client_id=${data.clientId}&redirect_uri=${data.redirectUrl}&response_type=code&scope=read%20write%20follow")
                     val intent = Intent(Intent.ACTION_VIEW, url)
                     startActivity(intent)
                 }

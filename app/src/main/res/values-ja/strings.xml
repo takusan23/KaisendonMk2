@@ -87,4 +87,6 @@
     <string name="device_info">端末情報</string>
     <string name="setting_column_title">タイムラインの横に表示できる数</string>
     <string name="setting_column_description">デフォルトは2です</string>
+    <string name="account_delete_message">アカウントを削除してもいいですか？</string>
+    <string name="account_lisy">アカウント一覧。削除すると自動でアプリが再起動します。</string>
 </resources>

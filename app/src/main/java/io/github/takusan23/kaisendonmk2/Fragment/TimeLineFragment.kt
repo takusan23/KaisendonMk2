@@ -111,7 +111,6 @@ class TimeLineFragment : Fragment() {
         GlobalScope.launch(Dispatchers.Main) {
             timeLineItemDataList.clear()
             timeLineAdapter.notifyDataSetChanged()
-            fragment_timeline_swipe?.isRefreshing = true
         }
         // val allTimeLineJSON = AllTimeLineJSON(context)
         GlobalScope.launch(Dispatchers.IO) {
@@ -123,6 +122,12 @@ class TimeLineFragment : Fragment() {
                     val timeLineData = CustomTimeLineDataJSON().parse(customTimeLineEntity.timeline)
                     // 有効時 で 通知以外
                     if (customTimeLineEntity.isEnable && timeLineData != null && timeLineData.timeLineLoad != "notification") {
+                        // くるくるなかったら表示
+                        withContext(Dispatchers.Main) {
+                            if (fragment_timeline_swipe?.isRefreshing == false) {
+                                fragment_timeline_swipe?.isRefreshing = true
+                            }
+                        }
                         if (customTimeLineEntity.service == "mastodon") {
                             // 取得件数
                             val limit = prefSetting.getString("setting_load_limit_mastodon", "40")?.toInt() ?: 40
@@ -158,6 +163,8 @@ class TimeLineFragment : Fragment() {
                         }
                     }
                 }
+            }
+            withContext(Dispatchers.IO) {
                 // 同じID消す
                 timeLineItemDataList.sortByDescending { timeLineItemData ->
                     when {
@@ -168,8 +175,6 @@ class TimeLineFragment : Fragment() {
                         else -> 0 // ここ来ることはまずありえない
                     }
                 }
-            }
-            withContext(Dispatchers.IO) {
                 // 並び替え
                 timeLineItemDataList = timeLineItemDataList.distinctBy { timeLineItemData ->
                     when {
@@ -199,7 +204,6 @@ class TimeLineFragment : Fragment() {
                 }
             }
         }
-        fragment_timeline_swipe?.isRefreshing = false
     }
 
 
@@ -247,7 +251,6 @@ class TimeLineFragment : Fragment() {
                                 addStreamingTLItem(TimeLineItemData(timeLineData, statusData))
                             }
                         }
-                        streamingAPIList.add(streamingAPI)
                     } else {
                         // Misskey
                         val misskeyStreamingAPI = MisskeyStreamingAPI(timeLineData.instanceToken)
