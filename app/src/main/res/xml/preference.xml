@@ -19,6 +19,17 @@
         android:summary="@string/setting_column_description"
         android:title="@string/setting_column_title" />
 
+    <SwitchPreference
+        android:icon="@drawable/ic_power_settings_new_black_24dp"
+        android:key="setting_not_sleep"
+        android:title="@string/setting_not_sleep" />
+
+    <SwitchPreference
+        android:icon="@drawable/ic_view_carousel_black_24dp"
+        android:key="setting_tablayout_mode"
+        android:summary="スワイプでTLを切り替えられるようになります。"
+        android:title="代わりにタブレイアウトを利用する（実験要素）" />
+
     <Preference android:title="@string/license">
         <intent
             android:action="android.intent.action.MAIN"

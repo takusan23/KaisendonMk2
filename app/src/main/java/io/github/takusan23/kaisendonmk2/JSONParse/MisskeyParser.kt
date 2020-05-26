@@ -47,7 +47,15 @@ class MisskeyParser {
         } else {
             null
         }
-        return MisskeyNoteData(instanceToken, createdAt, text, isMobile, noteId, renoteCount, reaction, emoji, user, renote)
+        val fields = jsonObject.optJSONArray("fields")
+        val mediaArray = arrayListOf<String>()
+        if (fields != null) {
+            for (i in 0 until fields.length()) {
+                val url = fields.getJSONObject(i).getString("url")
+                mediaArray.add(url)
+            }
+        }
+        return MisskeyNoteData(instanceToken, createdAt, text, isMobile, noteId, renoteCount, reaction, emoji, user, renote, mediaArray)
     }
 
     /**

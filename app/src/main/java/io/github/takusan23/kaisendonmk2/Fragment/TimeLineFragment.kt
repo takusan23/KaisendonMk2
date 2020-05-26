@@ -26,10 +26,7 @@ import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import io.github.takusan23.kaisendonmk2.TimeLine.toUnixTime
 import io.github.takusan23.kaisendonmk2.Tool.CustomTimeLineDataJSON
 import kotlinx.android.synthetic.main.fragment_timeline.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.io.File
 
@@ -86,17 +83,24 @@ class TimeLineFragment : Fragment() {
                     timeLineItemDataList.add(it)
                 }
                 timeLineAdapter.notifyDataSetChanged()
+                GlobalScope.launch {
+                    initAllTimeLine().await()
+                    initAllTimeLineStreaming()
+                }
             } else {
                 // 初回実行時
                 if (timeLineItemDataList.isEmpty()) {
-                    initAllTimeLine()
+                    GlobalScope.launch {
+                        initAllTimeLine().await()
+                        initAllTimeLineStreaming()
+                    }
                 }
             }
-
-            initAllTimeLineStreaming()
-
+            
             fragment_timeline_swipe.setOnRefreshListener {
-                initAllTimeLine()
+                GlobalScope.launch {
+                    initAllTimeLine().await()
+                }
             }
 
         }
@@ -105,61 +109,57 @@ class TimeLineFragment : Fragment() {
 
 
     // 表示するタイムライン読み込み
-    fun initAllTimeLine() {
+    fun initAllTimeLine() = GlobalScope.async(Dispatchers.Main) {
         // println("あれ")
         // くるくる
-        GlobalScope.launch(Dispatchers.Main) {
-            timeLineItemDataList.clear()
-            timeLineAdapter.notifyDataSetChanged()
-        }
+        timeLineItemDataList.clear()
+        timeLineAdapter.notifyDataSetChanged()
         // val allTimeLineJSON = AllTimeLineJSON(context)
-        GlobalScope.launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             // 読み込む
             val dao = customTimeLineDB.customTimeLineDBDao()
-            withContext(Dispatchers.IO) {
-                dao.getAll().forEach { customTimeLineEntity ->
-                    // タイムライン構成JSON
-                    val timeLineData = CustomTimeLineDataJSON().parse(customTimeLineEntity.timeline)
-                    // 有効時 で 通知以外
-                    if (customTimeLineEntity.isEnable && timeLineData != null && timeLineData.timeLineLoad != "notification") {
-                        // くるくるなかったら表示
-                        withContext(Dispatchers.Main) {
-                            if (fragment_timeline_swipe?.isRefreshing == false) {
-                                fragment_timeline_swipe?.isRefreshing = true
-                            }
+            dao.getAll().forEach { customTimeLineEntity ->
+                // タイムライン構成JSON
+                val timeLineData = CustomTimeLineDataJSON().parse(customTimeLineEntity.timeline)
+                // 有効時 で 通知以外
+                if (customTimeLineEntity.isEnable && timeLineData != null && timeLineData.timeLineLoad != "notification") {
+                    // くるくるなかったら表示
+                    withContext(Dispatchers.Main) {
+                        if (fragment_timeline_swipe?.isRefreshing == false) {
+                            fragment_timeline_swipe?.isRefreshing = true
                         }
-                        if (customTimeLineEntity.service == "mastodon") {
-                            // 取得件数
-                            val limit = prefSetting.getString("setting_load_limit_mastodon", "40")?.toInt() ?: 40
-                            // TL取得
-                            val timeLineAPI = TimeLineAPI(timeLineData.instanceToken)
-                            val timeLineParser = TimeLineParser()
-                            val response = when (timeLineData.timeLineLoad) {
-                                "home" -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
-                                "local" -> timeLineAPI.getLocalTimeLine(limit).await().body?.string()
-                                else -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
-                            }
-                            // 追加
-                            timeLineParser.parseTL(response, timeLineData.instanceToken).forEach { statusData ->
-                                val timeLineItemData = TimeLineItemData(timeLineData, statusData)
-                                timeLineItemDataList.add(timeLineItemData)
-                            }
-                        } else {
-                            // Misskey TL取得
-                            // 取得件数
-                            val limit = prefSetting.getString("setting_load_limit_misskey", "100")?.toInt() ?: 100
-                            val misskeyTimeLineAPI = MisskeyTimeLineAPI(timeLineData.instanceToken)
-                            val misskeyParser = MisskeyParser()
-                            val response = when (timeLineData.timeLineLoad) {
-                                "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
-                                "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await().body?.string()
-                                else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
-                            }
-                            // 追加
-                            misskeyParser.parseTimeLine(response, timeLineData.instanceToken).forEach { misskeyNoteData ->
-                                val timeLineItemData = TimeLineItemData(timeLineData, null, null, misskeyNoteData, null)
-                                timeLineItemDataList.add(timeLineItemData)
-                            }
+                    }
+                    if (customTimeLineEntity.service == "mastodon") {
+                        // 取得件数
+                        val limit = prefSetting.getString("setting_load_limit_mastodon", "40")?.toInt() ?: 40
+                        // TL取得
+                        val timeLineAPI = TimeLineAPI(timeLineData.instanceToken)
+                        val timeLineParser = TimeLineParser()
+                        val response = when (timeLineData.timeLineLoad) {
+                            "home" -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
+                            "local" -> timeLineAPI.getLocalTimeLine(limit).await().body?.string()
+                            else -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
+                        }
+                        // 追加
+                        timeLineParser.parseTL(response, timeLineData.instanceToken).forEach { statusData ->
+                            val timeLineItemData = TimeLineItemData(timeLineData, statusData)
+                            timeLineItemDataList.add(timeLineItemData)
+                        }
+                    } else {
+                        // Misskey TL取得
+                        // 取得件数
+                        val limit = prefSetting.getString("setting_load_limit_misskey", "100")?.toInt() ?: 100
+                        val misskeyTimeLineAPI = MisskeyTimeLineAPI(timeLineData.instanceToken)
+                        val misskeyParser = MisskeyParser()
+                        val response = when (timeLineData.timeLineLoad) {
+                            "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
+                            "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await().body?.string()
+                            else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
+                        }
+                        // 追加
+                        misskeyParser.parseTimeLine(response, timeLineData.instanceToken).forEach { misskeyNoteData ->
+                            val timeLineItemData = TimeLineItemData(timeLineData, null, null, misskeyNoteData, null)
+                            timeLineItemDataList.add(timeLineItemData)
                         }
                     }
                 }
@@ -334,8 +334,7 @@ class TimeLineFragment : Fragment() {
     fun setFont() {
         val file = File("${context?.getExternalFilesDir(null)}/font.ttf")
         if (file.exists()) {
-            (activity as? MainActivity)?.getTimeLineFragment()?.timeLineAdapter?.font =
-                Typeface.createFromFile(file)
+            timeLineAdapter.font = Typeface.createFromFile(file)
         }
     }
 

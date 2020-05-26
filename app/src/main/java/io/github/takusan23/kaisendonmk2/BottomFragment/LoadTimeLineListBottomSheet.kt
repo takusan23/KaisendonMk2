@@ -10,6 +10,9 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.github.takusan23.kaisendonmk2.Adapter.CustomTimeLineItemsListAdapter
 import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
 import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB
+import io.github.takusan23.kaisendonmk2.Fragment.TabLayoutFragment
+import io.github.takusan23.kaisendonmk2.Fragment.TabLayoutTimeLineFragment
+import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
 import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.R
 import kotlinx.android.synthetic.main.bottom_fragment_load_timeline_list.*
@@ -71,9 +74,28 @@ class LoadTimeLineListBottomSheet : BottomSheetDialogFragment() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mainActivity.getTimeLineFragment().apply {
-            initAllTimeLine()
-            initAllTimeLineStreaming()
+        // TL再読み込み
+        mainActivity.apply {
+            if (isTabTLMode) {
+                getTabLayoutAttachTimeLineFragmentList().forEach { fragment ->
+                    fragment.onDestroy()
+/*
+                    val data = fragment.arguments?.getSerializable("timeline") as CustomTimeLineDBEntity
+                    GlobalScope.launch {
+                        fragment.loadTimeLine(data).await()
+                        fragment.initStreaming(data)
+                    }
+*/
+                }
+                getTabLayoutFragment().initViewPager()
+            } else {
+                getTimeLineFragment().apply {
+                    GlobalScope.launch {
+                        initAllTimeLine().await()
+                        initAllTimeLineStreaming()
+                    }
+                }
+            }
         }
     }
 

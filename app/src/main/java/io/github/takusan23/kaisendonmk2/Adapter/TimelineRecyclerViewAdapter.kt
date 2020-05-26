@@ -1,17 +1,19 @@
 package io.github.takusan23.kaisendonmk2.Adapter
 
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
-import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,22 +24,17 @@ import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import io.github.takusan23.kaisendonmk2.BottomFragment.MisskeyReactionBottomSheet
-import io.github.takusan23.kaisendonmk2.MastodonAPI.StatusAPI
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
 import io.github.takusan23.kaisendonmk2.DataClass.CustomTimeLineData
 import io.github.takusan23.kaisendonmk2.DataClass.StatusData
 import io.github.takusan23.kaisendonmk2.DataClass.TimeLineItemData
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.MainActivity
+import io.github.takusan23.kaisendonmk2.MastodonAPI.StatusAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyNoteAPI
 import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
 import io.github.takusan23.kaisendonmk2.R
 import io.github.takusan23.kaisendonmk2.TimeLine.*
-import io.github.takusan23.kaisendonmk2.TimeLine.escapeToBrTag
-import io.github.takusan23.kaisendonmk2.TimeLine.isConnectionMobileData
-import io.github.takusan23.kaisendonmk2.TimeLine.isDarkMode
-import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
-import io.github.takusan23.kaisendonmk2.TimeLine.toTimeFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -124,7 +121,11 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // トゥート表示
                     idTextView.text = "@${status.accountData.acct}"
                     // 文字の最後に謎の改行ができる問題を治す
-                    val content = status.content.replace("<p>", "").replace("<p/>", "")
+                    val content = if (status.content.contains("<br />")) {
+                        status.content
+                    } else {
+                        HtmlCompat.fromHtml(status.content, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
+                    }
                     customEmoji.setCustomEmoji(nameTextView, status.accountData.displayName, status.accountData.allEmoji)
                     customEmoji.setCustomEmoji(contentTextView, content, status.allEmoji)
                     avatarImageView.setNullTint()
@@ -140,6 +141,10 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 見た目
                     setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
+                    // 画像表示
+                    mediaLinearLayout.removeAllViews()
+                    // 添付画像表示
+                    loadAttachImage(mediaLinearLayout, status.mediaAttachments)
                 }
             }
             holder is NotificationViewHolder -> {
@@ -231,15 +236,17 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         reactionTextView.visibility = View.VISIBLE
                     }
                     // リアクション、りのーと
-                    reactionTextView.setText(status.reaction.joinToString(separator = " | ") { misskeyReactionData -> "${misskeyReactionData.reaction}:${misskeyReactionData.reactionCount}" })
+                    reactionTextView.text = status.reaction.joinToString(separator = " | ") { misskeyReactionData -> "${misskeyReactionData.reaction}:${misskeyReactionData.reactionCount}" }
                     initMisskeyFav(favoutiteButton, status)
                     initRenote(boostButton, status)
                     applyButton(boostButton, status.renoteCount.toString(), status.isRenote, R.drawable.ic_repeat_black_24dp)
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
+                    // 添付画像表示
+                    loadAttachImage(mediaLinearLayout, status.fields)
                 }
             }
             holder is MisskeyNotificationViewHolder -> {
@@ -270,7 +277,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         customEmoji.setCustomEmoji(contentTextView, notificationData.note.text.escapeToBrTag(), notificationData.note.emoji)
                     }
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
@@ -314,6 +321,79 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                 }
             }
         }
+    }
+
+    /**
+     * 添付画像表示関数。
+     * @param isAlwaysShow 設定や環境（モバイルデータ時など）に関係なく強制的にインターネットから（キャッシュではなく）添付画像を表示させる場合はtrue
+     * @param list 画像のURLの配列
+     * @param mediaLinearLayout ImageViewを追加するLinearLayout
+     * */
+    private fun loadAttachImage(mediaLinearLayout: LinearLayout, list: ArrayList<String>, isAlwaysShow: Boolean = false) {
+        val context = mediaLinearLayout.context
+        // 画像読み込み設定
+        val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+        val isHideImage = preferences.getBoolean("timeline_setting_image_hide", false) // 強制画像非表示
+        val isMobileDataImageHide =
+            preferences.getBoolean("timeline_setting_image_hide_mobile", false) && isConnectionMobileData(context) // モバイルデータ回線なら非表示
+        val isStopGifAnimation = preferences.getBoolean("timeline_setting_image_gif_stop", false)
+        if ((isHideImage || isMobileDataImageHide) && !isAlwaysShow) {
+            list.forEach { url ->
+                val imageView = createAttachMediaImageView(mediaLinearLayout)
+                // キャッシュがあれば表示。なければ消す
+                glideImageLoad.loadOffline(imageView, url, true, false)
+                imageView.setOnClickListener {
+                    launchBrowser(context, url)
+                }
+                // GIF止める
+                if (isStopGifAnimation) {
+                    val drawable = imageView.drawable
+                    if (drawable is GifDrawable) {
+                        drawable.stop()
+                    }
+                }
+            }
+        } else {
+            list.forEach { url ->
+                val imageView = createAttachMediaImageView(mediaLinearLayout)
+                // ネットから持ってくる
+                Glide.with(context)
+                    .load(url)
+                    .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
+                    .into(imageView)
+                imageView.setOnClickListener {
+                    launchBrowser(context, url)
+                }
+                // GIF止める
+                if (isStopGifAnimation) {
+                    val drawable = imageView.drawable
+                    if (drawable is GifDrawable) {
+                        drawable.stop()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun launchBrowser(context: Context?, link: String) {
+        val intent = Intent(Intent.ACTION_VIEW, link.toUri())
+        context?.startActivity(intent)
+    }
+
+    /**
+     * 引数に入れたLinearLayoutにImageViewを追加して、追加したImageViewを返す関数。
+     * */
+    private fun createAttachMediaImageView(linearLayout: LinearLayout): ImageView {
+        // ImageView生成からザイズ変更
+        val imageView = ImageView(linearLayout.context)
+        val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 300)
+        layoutParams.weight = 1F
+        layoutParams.setMargins(5, 5, 5, 5)
+        imageView.layoutParams = layoutParams
+        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+        imageView.setNullTint()
+        linearLayout.addView(imageView)
+        return imageView
     }
 
     /**
@@ -599,6 +679,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
         val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
         val boostButton = itemView.findViewById<Button>(R.id.adapter_timeline_boost)
+        val mediaLinearLayout = itemView.findViewById<LinearLayout>(R.id.adapter_timeline_media)
 
         // 詳細表示
         val moreButton = itemView.findViewById<Button>(R.id.adapter_timeline_more)
@@ -626,13 +707,10 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
 
         // Boost
-        val boostNameTextView =
-            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_user_name)
+        val boostNameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_user_name)
         val boostIDTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_id)
-        val boostAvatarImageView =
-            itemView.findViewById<ImageView>(R.id.adapter_timeline_boost_avatar)
-        val boostContentTextView =
-            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_content)
+        val boostAvatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_boost_avatar)
+        val boostContentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_content)
 
         // fav
         val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
@@ -654,6 +732,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
         val boostButton = itemView.findViewById<Button>(R.id.adapter_timeline_boost)
         val reactionTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_reaction)
+        val mediaLinearLayout = itemView.findViewById<LinearLayout>(R.id.adapter_timeline_media)
 
         // 詳細表示
         val moreButton = itemView.findViewById<Button>(R.id.adapter_timeline_more)

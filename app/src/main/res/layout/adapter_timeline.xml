@@ -75,8 +75,15 @@
                 <TextView
                     android:id="@+id/adapter_timeline_content"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:autoLink="web" />
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/adapter_timeline_media"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal" />
 
             <TextView
                 android:id="@+id/adapter_timeline_info_textview"

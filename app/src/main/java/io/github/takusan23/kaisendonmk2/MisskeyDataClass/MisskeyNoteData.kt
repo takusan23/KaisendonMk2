@@ -18,6 +18,7 @@ data class MisskeyNoteData(
     val emoji: ArrayList<EmojiData>,
     val user: MisskeyUserData,
     val renote: MisskeyNoteData? = null,
+    val fields: ArrayList<String>,
     var isRenote: Boolean = false, // APIにはない。
     var isReaction: Boolean = false // APIにはない。
 ) : Serializable

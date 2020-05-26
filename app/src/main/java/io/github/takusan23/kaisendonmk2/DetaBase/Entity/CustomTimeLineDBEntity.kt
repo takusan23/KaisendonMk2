@@ -3,6 +3,7 @@ package io.github.takusan23.kaisendonmk2.DetaBase.Entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 import java.util.*
 
 /**
@@ -17,4 +18,4 @@ data class CustomTimeLineDBEntity(
     @ColumnInfo(name = "instance") val instance: String?,
     @ColumnInfo(name = "token") val token: String?,
     @ColumnInfo(name = "timeline") var timeline: String?
-)
+) : Serializable

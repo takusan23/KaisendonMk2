@@ -8,9 +8,11 @@ import android.os.Handler
 import android.os.Looper
 import android.telephony.TelephonyManager
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.AnimationUtils
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
+import androidx.fragment.app.Fragment
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.preference.PreferenceManager
@@ -25,6 +27,7 @@ import io.github.takusan23.kaisendonmk2.BottomFragment.DialogBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.MenuBottomSheet
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
 import io.github.takusan23.kaisendonmk2.DataClass.MultiAccountData
+import io.github.takusan23.kaisendonmk2.Fragment.TabLayoutFragment
 import io.github.takusan23.kaisendonmk2.Fragment.TimeLineFragment
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
@@ -50,6 +53,8 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var postInstanceToken: InstanceToken // Toot投稿用アカウント
     var postVisibility = "public"   // 投稿する時に使う公開範囲
+
+    var isTabTLMode = false // タブレイアウトモード有効時true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,10 +83,17 @@ class MainActivity : AppCompatActivity() {
 
         // 画面回転時はFragment作らない
         if (savedInstanceState == null) {
-            // タイムラインFragment
-            val fragment = TimeLineFragment()
-            fragment.mainActivity = this
-            supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment, "timeline_fragment").commit()
+            // TabLayoutModeかどうか
+            if (prefSetting.getBoolean("setting_tablayout_mode", false)) {
+                isTabTLMode = true
+                val fragment = TabLayoutFragment()
+                supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment, "tab_timeline_fragment").commit()
+            } else {
+                // タイムラインFragment
+                val fragment = TimeLineFragment()
+                fragment.mainActivity = this
+                supportFragmentManager.beginTransaction().replace(R.id.activity_main_fragment, fragment, "timeline_fragment").commit()
+            }
         }
 
         // メニュー初期化
@@ -92,6 +104,11 @@ class MainActivity : AppCompatActivity() {
 
         // 投稿部分初期化
         initPostCard()
+
+        // スリープ無効化
+        if (prefSetting.getBoolean("setting_not_sleep", false)) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
 
     }
 
@@ -138,9 +155,23 @@ class MainActivity : AppCompatActivity() {
         activity_main_post_card.visibility = View.VISIBLE
     }
 
-    // TimeLineFragment取得
-    fun getTimeLineFragment() =
-        supportFragmentManager.findFragmentById(R.id.activity_main_fragment) as TimeLineFragment
+    /**
+     * TimeLineFragmentを返します。
+     * 注意：isTabTLModeがtrueの場合は落ちます。
+     * */
+    fun getTimeLineFragment() = supportFragmentManager.findFragmentById(R.id.activity_main_fragment) as TimeLineFragment
+
+    /**
+     * TabLayoutFragmentを取得します。
+     * 注意：isTabTLModeがfalseの場合は落ちます。
+     * */
+    fun getTabLayoutFragment() = supportFragmentManager.findFragmentById(R.id.activity_main_fragment) as TabLayoutFragment
+
+    /**
+     * TabLayoutFragmentからAttachされているFragmentを返します。配列です。
+     * 注意：isTabTLModeがfalseの場合は落ちます。
+     * */
+    fun getTabLayoutAttachTimeLineFragmentList() = getTabLayoutFragment().viewPagerAdapter.fragmentList.filter { fragment -> fragment.isAdded }
 
     private fun initPostCard() {
         GlobalScope.launch {
