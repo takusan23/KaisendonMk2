@@ -96,7 +96,7 @@ class TimeLineFragment : Fragment() {
                     }
                 }
             }
-            
+
             fragment_timeline_swipe.setOnRefreshListener {
                 GlobalScope.launch {
                     initAllTimeLine().await()
@@ -136,14 +136,22 @@ class TimeLineFragment : Fragment() {
                         val timeLineAPI = TimeLineAPI(timeLineData.instanceToken)
                         val timeLineParser = TimeLineParser()
                         val response = when (timeLineData.timeLineLoad) {
-                            "home" -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
-                            "local" -> timeLineAPI.getLocalTimeLine(limit).await().body?.string()
-                            else -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
+                            "home" -> timeLineAPI.getHomeTimeLine(limit).await()
+                            "local" -> timeLineAPI.getLocalTimeLine(limit).await()
+                            else -> timeLineAPI.getHomeTimeLine(limit).await()
                         }
-                        // 追加
-                        timeLineParser.parseTL(response, timeLineData.instanceToken).forEach { statusData ->
-                            val timeLineItemData = TimeLineItemData(timeLineData, statusData)
-                            timeLineItemDataList.add(timeLineItemData)
+                        // 成功したか
+                        response.apply {
+                            if (isSuccessful) {
+                                // 追加
+                                timeLineParser.parseTL(this.response?.body?.string(), timeLineData.instanceToken).forEach { statusData ->
+                                    val timeLineItemData = TimeLineItemData(timeLineData, statusData)
+                                    timeLineItemDataList.add(timeLineItemData)
+                                }
+                            } else {
+                                // 失敗時
+                                mainActivity.showSnackBar("${getString(R.string.error)}/ Mastodon Timeline API\n${ioException?.message}")
+                            }
                         }
                     } else {
                         // Misskey TL取得
@@ -152,14 +160,22 @@ class TimeLineFragment : Fragment() {
                         val misskeyTimeLineAPI = MisskeyTimeLineAPI(timeLineData.instanceToken)
                         val misskeyParser = MisskeyParser()
                         val response = when (timeLineData.timeLineLoad) {
-                            "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
-                            "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await().body?.string()
-                            else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
+                            "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await()
+                            "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await()
+                            else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await()
                         }
-                        // 追加
-                        misskeyParser.parseTimeLine(response, timeLineData.instanceToken).forEach { misskeyNoteData ->
-                            val timeLineItemData = TimeLineItemData(timeLineData, null, null, misskeyNoteData, null)
-                            timeLineItemDataList.add(timeLineItemData)
+                        // 成功したか
+                        response.apply {
+                            if (isSuccessful) {
+                                // 追加
+                                misskeyParser.parseTimeLine(this.response?.body?.string(), timeLineData.instanceToken).forEach { misskeyNoteData ->
+                                    val timeLineItemData = TimeLineItemData(timeLineData, null, null, misskeyNoteData, null)
+                                    timeLineItemDataList.add(timeLineItemData)
+                                }
+                            } else {
+                                // 失敗時
+                                mainActivity.showSnackBar("${getString(R.string.error)}/ Misskey Timeline API\n${ioException?.message}")
+                            }
                         }
                     }
                 }

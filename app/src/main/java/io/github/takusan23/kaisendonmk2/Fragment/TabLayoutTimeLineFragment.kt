@@ -16,6 +16,7 @@ import io.github.takusan23.kaisendonmk2.DataClass.TimeLineItemData
 import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
+import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
 import io.github.takusan23.kaisendonmk2.MastodonAPI.TimeLineAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyTimeLineAPI
@@ -37,6 +38,7 @@ import java.io.File
  * */
 class TabLayoutTimeLineFragment : Fragment() {
 
+    val mainActivity: MainActivity by lazy { activity as MainActivity }
     lateinit var prefSetting: SharedPreferences
 
     // RecyclerView
@@ -211,14 +213,22 @@ class TabLayoutTimeLineFragment : Fragment() {
                 val timeLineAPI = TimeLineAPI(instanceToken)
                 val timeLineParser = TimeLineParser()
                 val response = when (customTimeLineData.timeLineLoad) {
-                    "home" -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
-                    "local" -> timeLineAPI.getLocalTimeLine(limit).await().body?.string()
-                    else -> timeLineAPI.getHomeTimeLine(limit).await().body?.string()
+                    "home" -> timeLineAPI.getHomeTimeLine(limit).await()
+                    "local" -> timeLineAPI.getLocalTimeLine(limit).await()
+                    else -> timeLineAPI.getHomeTimeLine(limit).await()
                 }
-                // 追加
-                timeLineParser.parseTL(response, instanceToken).forEach { statusData ->
-                    val timeLineItemData = TimeLineItemData(customTimeLineData, statusData)
-                    timeLineItemDataList.add(timeLineItemData)
+                // 成功したか
+                response.apply {
+                    if (isSuccessful) {
+                        // 追加
+                        timeLineParser.parseTL(this.response?.body?.string(), instanceToken).forEach { statusData ->
+                            val timeLineItemData = TimeLineItemData(customTimeLineData, statusData)
+                            timeLineItemDataList.add(timeLineItemData)
+                        }
+                    } else {
+                        // 失敗時
+                        mainActivity.showSnackBar("${getString(R.string.error)}/ Mastodon Timeline API\n${ioException?.message}")
+                    }
                 }
             } else {
                 // Misskey
@@ -228,14 +238,22 @@ class TabLayoutTimeLineFragment : Fragment() {
                 val misskeyTimeLineAPI = MisskeyTimeLineAPI(instanceToken)
                 val misskeyParser = MisskeyParser()
                 val response = when (customTimeLineData.timeLineLoad) {
-                    "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
-                    "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await().body?.string()
-                    else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await().body?.string()
+                    "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await()
+                    "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await()
+                    else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await()
                 }
                 // 追加
-                misskeyParser.parseTimeLine(response, instanceToken).forEach { misskeyNoteData ->
-                    val timeLineItemData = TimeLineItemData(customTimeLineData, null, null, misskeyNoteData, null)
-                    timeLineItemDataList.add(timeLineItemData)
+                response.apply {
+                    if (isSuccessful) {
+                        // 追加
+                        misskeyParser.parseTimeLine(this.response?.body?.string(), instanceToken).forEach { misskeyNoteData ->
+                            val timeLineItemData = TimeLineItemData(customTimeLineData, null, null, misskeyNoteData, null)
+                            timeLineItemDataList.add(timeLineItemData)
+                        }
+                    } else {
+                        // 失敗時
+                        mainActivity.showSnackBar("${getString(R.string.error)}/ Misskey Timeline API\n${ioException?.message}")
+                    }
                 }
             }
         }

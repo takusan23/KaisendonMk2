@@ -1,6 +1,8 @@
 package io.github.takusan23.kaisendonmk2.MisskeyAPI
 
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import io.github.takusan23.kaisendonmk2.Tool.ResultResponse
+import io.github.takusan23.kaisendonmk2.Tool.okhttpExecute
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -27,32 +29,28 @@ class MisskeyTimeLineAPI(val instanceToken: InstanceToken) {
     /**
      * ホームタイムライン取得
      * */
-    fun getHomeNotesTimeLine(limit: Int = 100): Deferred<Response> =
-        baseTimeLineAPI("notes/timeline", limit)
+    fun getHomeNotesTimeLine(limit: Int = 100) = baseTimeLineAPI("notes/timeline", limit)
 
     /**
      * ローカルタイムライン取得
      * */
-    fun getLocalNotesTimeLine(limit: Int = 100): Deferred<Response> =
-        baseTimeLineAPI("notes/local-timeline", limit)
+    fun getLocalNotesTimeLine(limit: Int = 100) = baseTimeLineAPI("notes/local-timeline", limit)
 
     /**
      * 共通部分
      * */
-    private fun baseTimeLineAPI(url: String, limit: Int = 100): Deferred<Response> =
-        GlobalScope.async {
-            val postData = JSONObject().apply {
-                put("limit", limit)
-                put("i", instanceToken.token)
-            }.toString().toRequestBody(APPLICATON_JSON)
-            val request = Request.Builder().apply {
-                url("https://${instanceToken.instance}/api/$url")
-                header("User-Agent", USER_AGENT)
-                post(postData)
-            }.build()
-            val okHttpClient = OkHttpClient()
-            val response = okHttpClient.newCall(request).execute()
-            return@async response
-        }
+    private fun baseTimeLineAPI(url: String, limit: Int = 100): Deferred<ResultResponse> = GlobalScope.async {
+        val postData = JSONObject().apply {
+            put("limit", limit)
+            put("i", instanceToken.token)
+        }.toString().toRequestBody(APPLICATON_JSON)
+        val request = Request.Builder().apply {
+            url("https://${instanceToken.instance}/api/$url")
+            header("User-Agent", USER_AGENT)
+            post(postData)
+        }.build()
+        val response = okhttpExecute(request)
+        return@async response
+    }
 
 }
