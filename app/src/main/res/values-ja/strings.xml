@@ -90,4 +90,5 @@
     <string name="account_delete_message">アカウントを削除してもいいですか？</string>
     <string name="account_lisy">アカウント一覧。削除すると自動でアプリが再起動します。</string>
     <string name="setting_not_sleep">スリープにしない</string>
+    <string name="misskey_reaction_message">リアクションしてもいいですか？</string>
 </resources>

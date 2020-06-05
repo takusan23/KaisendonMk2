@@ -8,10 +8,7 @@ import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.cardview.widget.CardView
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
@@ -23,6 +20,10 @@ import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.shape.ShapeAppearanceModel
+import com.google.android.material.snackbar.Snackbar
 import io.github.takusan23.kaisendonmk2.BottomFragment.MisskeyReactionBottomSheet
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
 import io.github.takusan23.kaisendonmk2.DataClass.CustomTimeLineData
@@ -32,7 +33,9 @@ import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.MastodonAPI.StatusAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyNoteAPI
+import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyReactionAPI
 import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
+import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyReactionData
 import io.github.takusan23.kaisendonmk2.R
 import io.github.takusan23.kaisendonmk2.TimeLine.*
 import kotlinx.coroutines.Dispatchers
@@ -231,12 +234,12 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     loadImage(avatarImageView, context, status.user.avatarUrl)
                     // リアクション無いとき（かなしいのだわ）TextView非表示
                     if (status.reaction.isEmpty()) {
-                        reactionTextView.visibility = View.GONE
+                        reactionChipGroup.visibility = View.GONE
                     } else {
-                        reactionTextView.visibility = View.VISIBLE
+                        reactionChipGroup.visibility = View.VISIBLE
                     }
-                    // リアクション、りのーと
-                    reactionTextView.text = status.reaction.joinToString(separator = " | ") { misskeyReactionData -> "${misskeyReactionData.reaction}:${misskeyReactionData.reactionCount}" }
+                    setReaction(reactionChipGroup, status, position)
+                    // reactionTextView.text = status.reaction.joinToString(separator = " | ") { misskeyReactionData -> "${misskeyReactionData.reaction}:${misskeyReactionData.reactionCount}" }
                     initMisskeyFav(favoutiteButton, status)
                     initRenote(boostButton, status)
                     applyButton(boostButton, status.renoteCount.toString(), status.isRenote, R.drawable.ic_repeat_black_24dp)
@@ -283,13 +286,12 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
             }
             holder is MisskeyRenoteViewHolder -> {
                 holder.apply {
-                    // トゥート
+                    // Note
                     val context = nameTextView.context
                     val status = timeLineItemDataList.get(position).misskeyNoteData ?: return
                     val reblogStatus = status.renote ?: return
                     // TL名
-                    timeLineName.text =
-                        timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
                     // ブースト元トゥート表示
                     boostIDTextView.text = "@${reblogStatus.user.username}"
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.user.name, reblogStatus.user.emoji)
@@ -320,6 +322,44 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
+        }
+    }
+
+    /**
+     * MisskeyのリアクションChipをセットする関数。
+     * @param position 配列の位置
+     * @param reactionChipGroup Chipを入れるChipGroup
+     * @param status MisskeyNoteData
+     * */
+    private fun setReaction(reactionChipGroup: ChipGroup, status: MisskeyNoteData, position: Int) {
+        val context = reactionChipGroup.context
+        // リアクション、りのーと
+        reactionChipGroup.removeAllViews()
+        status.reaction.forEach { misskeyReactionData ->
+            val chip = Chip(context)
+            chip.shapeAppearanceModel = ShapeAppearanceModel().withCornerSize(10f) // 丸み
+            chip.text = "${misskeyReactionData.reaction}：${misskeyReactionData.reactionCount}"
+            // 押したとき
+            chip.setOnClickListener {
+                // リアクションする
+                mainActivity.showSnackBar("${context.getString(R.string.misskey_reaction_message)}：${misskeyReactionData.reaction}", context.getString(R.string.reaction)) {
+                    GlobalScope.launch(Dispatchers.Main) {
+                        withContext(Dispatchers.IO) {
+                            MisskeyReactionAPI(status.instanceToken).reaction(status.noteId, misskeyReactionData.reaction).await()
+                        }
+                        Toast.makeText(context, context.getString(R.string.reaction_ok), Toast.LENGTH_SHORT).show()
+                        // カウント増やす
+                        timeLineItemDataList[position].misskeyNoteData?.reaction?.forEach { reaction ->
+                            if (reaction.reaction == misskeyReactionData.reaction) {
+                                reaction.reactionCount++
+                            }
+                            // さいせいせい
+                            setReaction(reactionChipGroup, status, position)
+                        }
+                    }
+                }
+            }
+            reactionChipGroup.addView(chip)
         }
     }
 
@@ -731,8 +771,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
         val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
         val boostButton = itemView.findViewById<Button>(R.id.adapter_timeline_boost)
-        val reactionTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_reaction)
         val mediaLinearLayout = itemView.findViewById<LinearLayout>(R.id.adapter_timeline_media)
+        val reactionChipGroup = itemView.findViewById<ChipGroup>(R.id.adapter_timeline_reaction_chip)
 
         // 詳細表示
         val moreButton = itemView.findViewById<Button>(R.id.adapter_timeline_more)
@@ -760,13 +800,10 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val contentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_content)
 
         // Boost
-        val boostNameTextView =
-            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_user_name)
+        val boostNameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_user_name)
         val boostIDTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_id)
-        val boostAvatarImageView =
-            itemView.findViewById<ImageView>(R.id.adapter_timeline_boost_avatar)
-        val boostContentTextView =
-            itemView.findViewById<TextView>(R.id.adapter_timeline_boost_content)
+        val boostAvatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_boost_avatar)
+        val boostContentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_boost_content)
 
         // fav
         val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)

@@ -89,4 +89,5 @@
     <string name="account_delete_message">Can I delete my account?</string>
     <string name="account_lisy">Account list. You can delete it here.</string>
     <string name="setting_not_sleep">Disable sleep</string>
+    <string name="misskey_reaction_message">Can I react?</string>
 </resources>
