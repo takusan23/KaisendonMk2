@@ -91,7 +91,7 @@
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:orientation="vertical">
 
                         <LinearLayout
@@ -114,6 +114,12 @@
                                 android:layout_weight="1"
                                 android:gravity="end" />
                         </LinearLayout>
+
+                        <View
+                            android:id="@+id/view"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="#757575" />
 
                         <TextView
                             android:id="@+id/adapter_timeline_boost_content"

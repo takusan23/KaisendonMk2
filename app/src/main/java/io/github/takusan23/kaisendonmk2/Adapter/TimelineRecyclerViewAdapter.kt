@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,7 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 import io.github.takusan23.kaisendonmk2.BottomFragment.MisskeyReactionBottomSheet
+import io.github.takusan23.kaisendonmk2.BottomFragment.QuickProfileBottomSheet
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
 import io.github.takusan23.kaisendonmk2.DataClass.CustomTimeLineData
 import io.github.takusan23.kaisendonmk2.DataClass.StatusData
@@ -43,6 +45,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.Serializable
 
 // タイムライン表示RecyclerView
 class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineItemData>) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -134,6 +137,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     avatarImageView.setNullTint()
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, status.accountData.avatar)
+                    // QuickProfile
+                    setQuickProfile(avatarImageView, status.accountData)
                     // お気に入り、ブースト
                     initFav(favoutiteButton, status)
                     initBoost(boostButton, status)
@@ -154,11 +159,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                 holder.apply {
                     // 通知
                     val context = nameTextView.context
-                    val notificationData =
-                        timeLineItemDataList.get(position).notificationData ?: return
+                    val notificationData = timeLineItemDataList.get(position).notificationData ?: return
                     // TL名
-                    timeLineName.text =
-                        timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
                     // 通知タイプ
                     notificationTextView.text = when (notificationData.type) {
                         "favourite" -> context.getText(R.string.notification_favourite)
@@ -177,6 +180,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     if (notificationData.status != null) {
                         customEmoji.setCustomEmoji(contentTextView, notificationData.status.content, notificationData.status.allEmoji)
                     }
+                    // QuickProfile
+                    setQuickProfile(avatarImageView, notificationData.accountData)
                     // 見た目
                     setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
@@ -189,19 +194,22 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val status = timeLineItemDataList.get(position).statusData ?: return
                     val reblogStatus = status.reblogStatusData ?: return
                     // TL名
-                    timeLineName.text =
-                        timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
                     // ブースト元トゥート表示
                     boostIDTextView.text = "@${reblogStatus.accountData.acct}"
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.accountData.displayName, reblogStatus.accountData.allEmoji)
                     customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.content, reblogStatus.allEmoji)
                     boostAvatarImageView.setNullTint()
+                    // QuickProfile
+                    setQuickProfile(boostAvatarImageView, reblogStatus.accountData)
                     // 画像読み込み関数
                     loadImage(boostAvatarImageView, context, reblogStatus.accountData.avatar)
                     // ブーストしたユーザーのアバター
                     idTextView.text = "@${status.accountData.acct}"
                     customEmoji.setCustomEmoji(nameTextView, "${status.accountData.displayName}<br>${context.getString(R.string.boosted)}", status.accountData.allEmoji)
                     avatarImageView.setNullTint()
+                    // QuickProfile
+                    setQuickProfile(avatarImageView, status.accountData)
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, status.accountData.avatar)
                     // お気に入り、ブースト
@@ -223,13 +231,14 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val context = nameTextView.context
                     val status = timeLineItemDataList.get(position).misskeyNoteData ?: return
                     // TL名
-                    timeLineName.text =
-                        timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
                     // トゥート表示
                     idTextView.text = "@${status.user.username}"
                     customEmoji.setCustomEmoji(nameTextView, status.user.name, status.user.emoji)
                     customEmoji.setCustomEmoji(contentTextView, status.text.escapeToBrTag(), status.emoji)
                     avatarImageView.setNullTint()
+                    // QuickProfile
+                    setQuickProfile(avatarImageView, status.user)
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, status.user.avatarUrl)
                     // リアクション無いとき（かなしいのだわ）TextView非表示
@@ -256,11 +265,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                 holder.apply {
                     // 通知
                     val context = nameTextView.context
-                    val notificationData =
-                        timeLineItemDataList.get(position).misskeyNotificationData ?: return
+                    val notificationData = timeLineItemDataList.get(position).misskeyNotificationData ?: return
                     // TL名
-                    timeLineName.text =
-                        timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
                     // 通知タイプ
                     notificationTextView.text = when (notificationData.type) {
                         "reaction" -> notificationData.reaction
@@ -273,6 +280,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     idTextView.text = "@${notificationData.user.username}"
                     customEmoji.setCustomEmoji(nameTextView, notificationData.user.name, notificationData.user.emoji)
                     avatarImageView.setNullTint()
+                    // QuickProfile
+                    setQuickProfile(avatarImageView, notificationData.user)
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, notificationData.user.avatarUrl)
                     // statusあればトゥート表示
@@ -297,6 +306,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.user.name, reblogStatus.user.emoji)
                     customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.text.escapeToBrTag(), reblogStatus.emoji)
                     boostAvatarImageView.setNullTint()
+                    // QuickProfile
+                    setQuickProfile(boostAvatarImageView, reblogStatus.user)
                     // 画像読み込み関数
                     loadImage(boostAvatarImageView, context, reblogStatus.user.avatarUrl)
                     // ブーストしたユーザーのアバター
@@ -309,6 +320,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         contentTextView.visibility = View.GONE
                     }
                     avatarImageView.setNullTint()
+                    // QuickProfile
+                    setQuickProfile(avatarImageView, status.user)
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, status.user.avatarUrl)
                     // リアクション、りのーと
@@ -322,6 +335,21 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
+        }
+    }
+
+    /**
+     * QuickProfile表示関数。
+     * @param imageView 押すView
+     * @param serializable bundleに詰める。AccountDataなど
+     * */
+    private fun setQuickProfile(imageView: ImageView, serializable: Serializable) {
+        imageView.setOnClickListener {
+            val quickProfileBottomSheet = QuickProfileBottomSheet()
+            val bundle = Bundle()
+            bundle.putSerializable("data", serializable)
+            quickProfileBottomSheet.arguments = bundle
+            quickProfileBottomSheet.show(mainActivity.supportFragmentManager, "quick")
         }
     }
 

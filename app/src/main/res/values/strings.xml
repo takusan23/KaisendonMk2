@@ -90,4 +90,9 @@
     <string name="account_lisy">Account list. You can delete it here.</string>
     <string name="setting_not_sleep">Disable sleep</string>
     <string name="misskey_reaction_message">Can I react?</string>
+    <string name="misskey_visibility_local_only">Only publish locally (not remotely)</string>
+    <string name="follow">Follow</string>
+    <string name="follower">Follower</string>
+    <string name="status_count">Statuses</string>
+    <string name="last_updated">last updated</string>
 </resources>

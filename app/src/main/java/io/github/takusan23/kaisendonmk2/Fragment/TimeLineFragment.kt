@@ -307,11 +307,7 @@ class TimeLineFragment : Fragment() {
     // ストリーミングで受け取ったトゥートを表示
     fun addStreamingTLItem(timeLineItemData: TimeLineItemData) {
         // 追加済みかどうか判断する
-        val isAdded = if (timeLineItemData.customTimeLineData.service == "mastodon") {
-            addedIdList.contains(timeLineItemData.statusData?.id)
-        } else {
-            addedIdList.contains(timeLineItemData.misskeyNoteData?.noteId)
-        }
+        val isAdded = addedIdList.any { id -> id == timeLineItemData.statusData?.id ?: timeLineItemData.misskeyNoteData!!.noteId }
         if (!isAdded) {
             GlobalScope.launch(Dispatchers.Main) {
                 if (fragment_timeline_recyclerview?.layoutManager is StaggeredGridLayoutManager) {
@@ -326,6 +322,8 @@ class TimeLineFragment : Fragment() {
                         // 一番上にいれば一番上に追従する
                         (fragment_timeline_recyclerview?.layoutManager as StaggeredGridLayoutManager).scrollToPosition(0)
                     }
+                    // 追加済み
+                    addedIdList.add(timeLineItemData.statusData?.id ?: timeLineItemData.misskeyNoteData!!.noteId)
                 }
             }
         }
@@ -338,9 +336,7 @@ class TimeLineFragment : Fragment() {
         if (file.exists() && file.listFiles()?.isNotEmpty() == true) {
             val imageFile = file.listFiles()?.get(0)
             fragment_timeline_background.setNullTint()
-            Glide.with(fragment_timeline_background)
-                .load(imageFile)
-                .into(fragment_timeline_background)
+            Glide.with(fragment_timeline_background).load(imageFile).into(fragment_timeline_background)
         } else {
             fragment_timeline_background.setImageDrawable(null)
         }

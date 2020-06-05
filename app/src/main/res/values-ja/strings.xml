@@ -91,4 +91,9 @@
     <string name="account_lisy">アカウント一覧。削除すると自動でアプリが再起動します。</string>
     <string name="setting_not_sleep">スリープにしない</string>
     <string name="misskey_reaction_message">リアクションしてもいいですか？</string>
+    <string name="misskey_visibility_local_only">ローカルのみ公開（リモートには公開しない）</string>
+    <string name="follow">フォロー</string>
+    <string name="follower">フォロワー</string>
+    <string name="status_count">投稿数</string>
+    <string name="last_updated">最終更新日</string>
 </resources>

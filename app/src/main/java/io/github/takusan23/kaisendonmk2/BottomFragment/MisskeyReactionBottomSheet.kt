@@ -74,12 +74,6 @@ class MisskeyReactionBottomSheet(var noteData: MisskeyNoteData) : BottomSheetDia
             }
             if (response.isSuccessful) {
                 Toast.makeText(context, "${context?.getString(R.string.reaction_ok)}：${reaction}", Toast.LENGTH_SHORT).show()
-                // 更新
-                noteData.reaction.forEach { reactionData ->
-                    if (reactionData.reaction == reaction) {
-                        reactionData.reactionCount++
-                    }
-                }
                 dismiss()
             } else {
                 Toast.makeText(context, "${context?.getString(R.string.error)}：${response.code}", Toast.LENGTH_SHORT).show()

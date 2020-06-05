@@ -2,10 +2,7 @@ package io.github.takusan23.kaisendonmk2.JSONParse
 
 import io.github.takusan23.kaisendonmk2.DataClass.EmojiData
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
-import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
-import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNotificationData
-import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyReactionData
-import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyUserData
+import io.github.takusan23.kaisendonmk2.MisskeyDataClass.*
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -71,6 +68,27 @@ class MisskeyParser {
         val avatarUrl = jsonObject.getString("avatarUrl")
         val bannerUrl = jsonObject.optString("bannerUrl", null)
         return MisskeyUserData(instanceToken, name, username, isAdmin, id, emoji, avatarUrl, bannerUrl)
+    }
+
+    /**
+     * アカウント情報のJSONをパースする。
+     * 注意：タイムライン取得の時についてくるアカウント情報ではない
+     * */
+    fun parseShowAccount(jsonString: String, instanceToken: InstanceToken): MisskeyShowUserData {
+        val jsonObject = JSONObject(jsonString)
+        val name = jsonObject.getString("name")
+        val username = jsonObject.getString("username")
+        val isAdmin = jsonObject.optBoolean("isAdmin", false)
+        val id = jsonObject.getString("id")
+        val emoji = parseEmoji(jsonObject.optJSONArray("emojis")?.toString())
+        val avatarUrl = jsonObject.getString("avatarUrl")
+        val bannerUrl = jsonObject.optString("bannerUrl", null)
+        val createdAt = jsonObject.getString("createdAt")
+        val description = jsonObject.getString("description")
+        val followersCount = jsonObject.getInt("followersCount")
+        val followingCount = jsonObject.getInt("followingCount")
+        val notesCount = jsonObject.getInt("notesCount")
+        return MisskeyShowUserData(instanceToken, name, username, isAdmin, id, emoji, avatarUrl, bannerUrl, createdAt, description, followersCount, followingCount, notesCount)
     }
 
     /**

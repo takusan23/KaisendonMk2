@@ -1,6 +1,8 @@
 package io.github.takusan23.kaisendonmk2.MisskeyAPI
 
 import io.github.takusan23.kaisendonmk2.MastodonAPI.InstanceToken
+import io.github.takusan23.kaisendonmk2.Tool.ResultResponse
+import io.github.takusan23.kaisendonmk2.Tool.okhttpExecute
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -40,6 +42,23 @@ class MisskeyAccountAPI(val instanceToken: InstanceToken) {
         val okHttpClient = OkHttpClient()
         val response = okHttpClient.newCall(request).execute()
         return@async response
+    }
+
+    /**
+     * 指定したユーザーの情報を取得する。
+     * パースはMisskeyParse()#parseShowAccount()でパースできます。
+     * */
+    fun showAccount(userId: String): Deferred<ResultResponse> = GlobalScope.async {
+        val postData = JSONObject().apply {
+            put("i", instanceToken.token)
+            put("userId", userId)
+        }.toString().toRequestBody(APPLICATON_JSON)
+        val request = Request.Builder().apply {
+            url("$BASE_URL/users/show")
+            header("User-Agent", USER_AGENT)
+            post(postData)
+        }.build()
+        okhttpExecute(request)
     }
 
 }

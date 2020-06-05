@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var postInstanceToken: InstanceToken // Toot投稿用アカウント
     var postVisibility = "public"   // 投稿する時に使う公開範囲
+    var isMisskeyLocalOnly = false // Misskeyのローカルのみ公開のやつ
 
     var isTabTLMode = false // タブレイアウトモード有効時true
 
@@ -273,28 +274,33 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_public), R.drawable.ic_public_black_24dp))
                     add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_home), R.drawable.ic_train_black_24dp))
+                    add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_local_only), R.drawable.ic_favorite_border_black_24dp))
                     add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_followers), R.drawable.ic_home_black_24dp))
                     add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_specified), R.drawable.ic_alternate_email_black_24dp))
                     add(DialogBottomSheet.DialogBottomSheetItem(getString(R.string.misskey_visibility_private), R.drawable.ic_account_box_black_24dp))
                 }
             }
             DialogBottomSheet(getString(R.string.visibility), visibilityButtons) { i, bottomSheetDialogFragment ->
-                postVisibility = if (postInstanceToken.service == "mastodon") {
+                if (postInstanceToken.service == "mastodon") {
                     when (i) {
-                        0 -> StatusAPI.VISIBILITY_PUBLIC
-                        1 -> StatusAPI.VISIBILITY_UNLISTED
-                        2 -> StatusAPI.VISIBILITY_PRIVATE
-                        3 -> StatusAPI.VISIBILITY_DIRECT
-                        else -> StatusAPI.VISIBILITY_DIRECT
+                        0 -> postVisibility = StatusAPI.VISIBILITY_PUBLIC
+                        1 -> postVisibility = StatusAPI.VISIBILITY_UNLISTED
+                        2 -> postVisibility = StatusAPI.VISIBILITY_PRIVATE
+                        3 -> postVisibility = StatusAPI.VISIBILITY_DIRECT
                     }
                 } else {
+                    isMisskeyLocalOnly = false
                     when (i) {
-                        0 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC
-                        1 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_HOME
-                        2 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_FOLLOWERS
-                        3 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_SPECIFIED
-                        4 -> MisskeyNoteAPI.MISSKEY_VISIBILITY_PRIVATE
-                        else -> MisskeyNoteAPI.MISSKEY_VISIBILITY_SPECIFIED
+                        0 -> postVisibility = MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC
+                        1 -> postVisibility = MisskeyNoteAPI.MISSKEY_VISIBILITY_HOME
+                        2 -> {
+                            // ローカルのみ公開
+                            isMisskeyLocalOnly = true
+                            postVisibility = MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC
+                        }
+                        3 -> postVisibility = MisskeyNoteAPI.MISSKEY_VISIBILITY_FOLLOWERS
+                        4 -> postVisibility = MisskeyNoteAPI.MISSKEY_VISIBILITY_SPECIFIED
+                        5 -> postVisibility = MisskeyNoteAPI.MISSKEY_VISIBILITY_PRIVATE
                     }
                 }
                 activity_main_toot_visibility.setImageDrawable(getDrawable(visibilityButtons[i].icon))
@@ -352,13 +358,9 @@ class MainActivity : AppCompatActivity() {
         // アカウントセット
         fun setAccount(position: Int) = GlobalScope.async(Dispatchers.Main) {
             activity_main_toot_account_avatar.setNullTint()
-            postInstanceToken = multiAccountProfileList[position].accountData?.instanceToken
-                ?: multiAccountProfileList[position].misskeyUserData!!.instanceToken
+            postInstanceToken = multiAccountProfileList[position].accountData?.instanceToken ?: multiAccountProfileList[position].misskeyUserData!!.instanceToken
             Glide.with(activity_main_toot_account_avatar)
-                .load(
-                    multiAccountProfileList[position].accountData?.avatarStatic
-                        ?: multiAccountProfileList[position].misskeyUserData!!.avatarUrl
-                )
+                .load(multiAccountProfileList[position].accountData?.avatarStatic ?: multiAccountProfileList[position].misskeyUserData!!.avatarUrl)
                 .apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
                 .into(activity_main_toot_account_avatar)
             // カスタム絵文字 support
