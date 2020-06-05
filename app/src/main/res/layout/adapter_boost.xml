@@ -17,19 +17,6 @@
             android:layout_margin="5dp"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/adapter_timeline_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="end"
-                android:padding="5dp"
-                android:text="タイムラインの名前" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#757575" />
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -49,15 +36,32 @@
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/adapter_timeline_user_name"
+                        android:id="@+id/adapter_timeline_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textStyle="bold" />
+                        android:gravity="end"
+                        android:text="タイムラインの名前" />
 
-                    <TextView
-                        android:id="@+id/adapter_timeline_id"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/adapter_timeline_user_name"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/adapter_timeline_id"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:gravity="end" />
+                    </LinearLayout>
                 </LinearLayout>
 
             </LinearLayout>
@@ -87,28 +91,39 @@
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
+                        android:layout_height="match_parent"
                         android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/adapter_timeline_boost_user_name"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textStyle="bold" />
+                            android:layout_marginStart="5dp"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:id="@+id/adapter_timeline_boost_user_name"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/adapter_timeline_boost_id"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:gravity="end" />
+                        </LinearLayout>
 
                         <TextView
-                            android:id="@+id/adapter_timeline_boost_id"
+                            android:id="@+id/adapter_timeline_boost_content"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content" />
+
                     </LinearLayout>
 
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/adapter_timeline_boost_content"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <TextView

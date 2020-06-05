@@ -742,8 +742,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // Misskey 通知ViewHolder
     inner class MisskeyNotificationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
-        val notificationTextView =
-            itemView.findViewById<TextView>(R.id.adapter_notification_type)
+        val notificationTextView = itemView.findViewById<TextView>(R.id.adapter_notification_type)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
