@@ -122,18 +122,35 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val context = nameTextView.context
                     val status = timeLineItemDataList.get(position).statusData ?: return
                     // TL名
-                    timeLineName.text =
-                        timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
                     // トゥート表示
                     idTextView.text = "@${status.accountData.acct}"
-                    // 文字の最後に謎の改行ができる問題を治す
-                    val content = if (status.content.contains("<br />")) {
-                        status.content
+                    // こんてんとわーにんぐ
+                    if (status.spoilerText.isEmpty()) {
+                        // CW無し
+                        customEmoji.setCustomEmoji(contentTextView, status.content, status.allEmoji)
+                        contentTextView.visibility = View.VISIBLE
+                        cwButton.visibility = View.GONE
+                        cwContentTextView.visibility = View.GONE
                     } else {
-                        HtmlCompat.fromHtml(status.content, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
+                        // CWで保護された投稿
+                        // ボタン、CWテキスト表示
+                        cwButton.visibility = View.VISIBLE
+                        cwContentTextView.visibility = View.VISIBLE
+                        contentTextView.visibility = View.GONE
+                        cwButton.setOnClickListener {
+                            contentTextView.apply {
+                                visibility = if (visibility == View.GONE) {
+                                    View.VISIBLE
+                                } else {
+                                    View.GONE
+                                }
+                            }
+                        }
+                        customEmoji.setCustomEmoji(cwContentTextView, status.spoilerText, status.allEmoji)
+                        customEmoji.setCustomEmoji(contentTextView, status.content, status.allEmoji)
                     }
                     customEmoji.setCustomEmoji(nameTextView, status.accountData.displayName, status.accountData.allEmoji)
-                    customEmoji.setCustomEmoji(contentTextView, content, status.allEmoji)
                     avatarImageView.setNullTint()
                     // 画像読み込み関数
                     loadImage(avatarImageView, context, status.accountData.avatar)
@@ -744,6 +761,9 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
         val contentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_content)
+        val cwContentTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_cw_content) // こんてんとわーにんぐ
+        val cwButton = itemView.findViewById<Button>(R.id.adapter_timeline_cw_button) // こんてんとわーにんぐ表示
+
         val avatarImageView = itemView.findViewById<ImageView>(R.id.adapter_timeline_avatar)
         val favoutiteButton = itemView.findViewById<Button>(R.id.adapter_timeline_favourite)
         val boostButton = itemView.findViewById<Button>(R.id.adapter_timeline_boost)

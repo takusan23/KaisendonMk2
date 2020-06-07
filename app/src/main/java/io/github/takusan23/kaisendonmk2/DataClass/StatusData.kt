@@ -19,5 +19,6 @@ data class StatusData(
     val mediaAttachments: ArrayList<String>,
     val card: CardData?,
     val allEmoji: ArrayList<EmojiData>,
-    val reblogStatusData: StatusData? = null
+    val reblogStatusData: StatusData? = null,
+    val spoilerText: String = ""
 ) : Serializable

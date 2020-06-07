@@ -41,36 +41,37 @@ class TimeLineParser {
         val boostCount = jsonObject.getInt("reblogs_count")
         val isBoosted = jsonObject.optBoolean("reblogged", false)
         val content = jsonObject.getString("content")
-        val mediaAttachment =
-            parseMediaAttachments(jsonObject.getJSONArray("media_attachments"))
+        val mediaAttachment = parseMediaAttachments(jsonObject.getJSONArray("media_attachments"))
         val card = parseCard(jsonObject.optJSONObject("card"))
         val emojis = parseEmoji(jsonObject.getJSONArray("all_emojis"))
         // アカウント情報
-        val accountData =
-            parseAccount(jsonObject.getJSONObject("account").toString(), instanceToken)
+        val accountData = parseAccount(jsonObject.getJSONObject("account").toString(), instanceToken)
         // ブースト
         val boostStatus = if (jsonObject.isNull("reblog")) {
             null
         } else {
             parseStatus(jsonObject.getString("reblog"), instanceToken)
         }
+        // CW
+        val spoilerText = jsonObject.getString("spoiler_text")
         // ステータスデータクラス
         val statusData = StatusData(
-            instanceToken,
-            id,
-            createdAt,
-            visibility,
-            url,
-            favouritesCount,
-            isFavourited,
-            boostCount,
-            isBoosted,
-            accountData,
-            content,
-            mediaAttachment,
-            card,
-            emojis,
-            boostStatus
+            instanceToken = instanceToken,
+            id = id,
+            createdAt = createdAt,
+            visibility = visibility,
+            url = url,
+            favouritesCount = favouritesCount,
+            isFavourited = isFavourited,
+            boostCount = boostCount,
+            isBoosted = isBoosted,
+            accountData = accountData,
+            content = content,
+            mediaAttachments = mediaAttachment,
+            card = card,
+            allEmoji = emojis,
+            reblogStatusData = boostStatus,
+            spoilerText = spoilerText
         )
         return statusData
     }
