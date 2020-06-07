@@ -93,7 +93,7 @@
                             android:layout_height="wrap_content"
                             android:minWidth="0dp"
                             android:minHeight="0dp"
-                            android:text="cw"
+                            android:text="@string/cw"
                             android:visibility="gone"
                             app:icon="@drawable/ic_expand_more_black_24dp" />
 

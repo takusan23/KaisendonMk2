@@ -97,4 +97,7 @@
     <string name="status_count">投稿数</string>
     <string name="last_updated">最終更新日</string>
     <string name="cw">CW</string>
+    <string name="fav_bt_message">お気に入りとブーストを行っていいですか？</string>
+    <string name="fav_bt_button">Fav+BT</string>
+    <string name="fav_bt_ok">Fav+BTできました。</string>
 </resources>

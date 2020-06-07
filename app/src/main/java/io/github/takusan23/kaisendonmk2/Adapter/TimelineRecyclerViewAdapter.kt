@@ -159,6 +159,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // お気に入り、ブースト
                     initFav(favoutiteButton, status)
                     initBoost(boostButton, status)
+                    // 長押しでFav+BT
+                    initFavBT(favoutiteButton, boostButton, status)
                     applyButton(favoutiteButton, status.favouritesCount.toString(), status.isFavourited, R.drawable.ic_star_border_black_24dp)
                     applyButton(boostButton, status.boostCount.toString(), status.isBoosted, R.drawable.ic_repeat_black_24dp)
                     // 詳細表示
@@ -352,6 +354,41 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
+        }
+    }
+
+    /**
+     * 長押しでFavとBTできるやつ
+     * */
+    private fun initFavBT(favouriteButton: Button?, boostButton: Button, status: StatusData) {
+        favouriteButton?.setOnLongClickListener {
+            val context = it.context
+            // 本当に良い？
+            mainActivity.showSnackBar(context.getString(R.string.fav_bt_message), context.getString(R.string.fav_bt_button)) {
+                GlobalScope.launch(Dispatchers.Main) {
+                    // fav
+                    val favResponse = withContext(Dispatchers.IO) {
+                        StatusAPI(status.instanceToken).postStatusFav(status.id, status.instanceToken).await()
+                    }
+                    // bt
+                    val btResponse = withContext(Dispatchers.IO) {
+                        StatusAPI(status.instanceToken).postStatusBoost(status.id, status.instanceToken).await()
+                    }
+                    if (favResponse.isSuccessful && btResponse.isSuccessful) {
+                        // 成功時
+                        mainActivity.showSnackBar(context.getString(R.string.fav_bt_ok))
+                        status.isFavourited = !status.isFavourited
+                        status.isBoosted = !status.isBoosted
+                        // UI反映
+                        applyButton(favouriteButton, status.favouritesCount.toString(), status.isFavourited, R.drawable.ic_star_border_black_24dp)
+                        applyButton(boostButton, status.boostCount.toString(), status.isBoosted, R.drawable.ic_repeat_black_24dp)
+                    } else {
+                        // 失敗時
+                        mainActivity.showSnackBar("${context.getString(R.string.error)}\n${favResponse.code} / ${btResponse.code}")
+                    }
+                }
+            }
+            true
         }
     }
 
