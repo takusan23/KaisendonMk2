@@ -44,6 +44,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.io.File
 import java.io.Serializable
 
@@ -724,20 +725,21 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
             // Renoteする
             val misskeyNoteAPI = MisskeyNoteAPI(note.instanceToken)
             val misskeyParser = MisskeyParser()
-            GlobalScope.launch(Dispatchers.Main) {
-                val response = withContext(Dispatchers.IO) {
-                    misskeyNoteAPI.notesCreate("", MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC, true, note.renote!!.noteId).await()
-                }
-                if (response.isSuccessful) {
-                    // 成功
-                    val responseNote =
-                        misskeyParser.parseNote(response.body?.string()!!, note.instanceToken)
-                    applyMisskeyButton(button, responseNote.renoteCount.toString(), true, R.drawable.ic_repeat_black_24dp)
-                    // 適用
-                    note.isRenote = true
-                    note.renoteCount = responseNote.renoteCount
-                } else {
-                    mainActivity.showSnackBar("${context.getString(R.string.error)}：${response.code}")
+            mainActivity.showSnackBar(context.getString(R.string.renote_message), "renote") {
+                GlobalScope.launch(Dispatchers.Main) {
+                    val response = withContext(Dispatchers.IO) {
+                        misskeyNoteAPI.notesCreate("", MisskeyNoteAPI.MISSKEY_VISIBILITY_PUBLIC, true, note.noteId).await()
+                    }
+                    if (response.isSuccessful) {
+                        // 成功
+                        val responseNote = misskeyParser.parseNote(JSONObject(response.body?.string()!!).getJSONObject("createNote").toString(), note.instanceToken)
+                        applyMisskeyButton(button, responseNote.renoteCount.toString(), true, R.drawable.ic_repeat_black_24dp)
+                        // 適用
+                        note.isRenote = true
+                        note.renoteCount = responseNote.renoteCount
+                    } else {
+                        mainActivity.showSnackBar("${context.getString(R.string.error)}：${response.code}")
+                    }
                 }
             }
         }

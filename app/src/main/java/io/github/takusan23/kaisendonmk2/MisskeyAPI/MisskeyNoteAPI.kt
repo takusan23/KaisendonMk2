@@ -54,12 +54,13 @@ class MisskeyNoteAPI(val instanceToken: InstanceToken) {
     fun notesCreate(text: String, visibility: String = "public", isViaMobile: Boolean = true, renoteId: String? = null): Deferred<Response> =
         GlobalScope.async {
             val postData = JSONObject().apply {
-                put("text", text)
                 put("i", instanceToken.token)
                 put("visibility", visibility)
                 put("viaMobile", isViaMobile)
                 if (renoteId != null) {
                     put("renoteId", renoteId)
+                } else {
+                    put("text", text)
                 }
             }.toString().toRequestBody(APPLICATON_JSON)
             val request = Request.Builder().apply {
