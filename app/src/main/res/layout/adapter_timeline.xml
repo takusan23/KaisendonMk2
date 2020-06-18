@@ -5,11 +5,15 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/adapter_timeline_cardview"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="2dp">
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="10sp"
+            android:layout_height="match_parent"
+            android:background="@color/colorPrimary" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -170,6 +174,6 @@
 
 
         </LinearLayout>
+    </LinearLayout>
 
-    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

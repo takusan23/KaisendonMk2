@@ -166,7 +166,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+                    // setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                     // 画像表示
                     mediaLinearLayout.removeAllViews()
@@ -202,7 +202,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // QuickProfile
                     setQuickProfile(avatarImageView, notificationData.accountData)
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
@@ -239,7 +239,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
@@ -274,7 +274,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
+//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                     // 添付画像表示
                     loadAttachImage(mediaLinearLayout, status.fields)
@@ -308,7 +308,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         customEmoji.setCustomEmoji(contentTextView, notificationData.note.text.escapeToBrTag(), notificationData.note.emoji)
                     }
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
+//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
@@ -350,7 +350,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
@@ -793,7 +793,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     // トゥートViewHolder
     inner class TootViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
@@ -813,7 +813,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     // 通知ViewHolder
     inner class NotificationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
         val notificationTextView =
             itemView.findViewById<TextView>(R.id.adapter_notification_type)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
@@ -825,7 +825,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     // ブーストViewHolder
     inner class BoostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
@@ -848,7 +848,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     // Misskey Note ViewHolder
     inner class MisskeyNoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
@@ -866,7 +866,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     // Misskey 通知ViewHolder
     inner class MisskeyNotificationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
         val notificationTextView = itemView.findViewById<TextView>(R.id.adapter_notification_type)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
@@ -877,7 +877,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     // Misskey Renote ViewHolder
     inner class MisskeyRenoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
