@@ -21,15 +21,13 @@ class CustomTimeLineDataJSON {
         val token = timelineJSON.getString("token")
         val service = timelineJSON.getString("service")
         val backgroundColor = timelineJSON.getString("background_color")
-        val textColor = timelineJSON.getString("text_color")
         val name = timelineJSON.getString("name")
         return CustomTimeLineData(
             instanceToken = InstanceToken(instance = instanceName, token = token, service = service),
             service = service,
             timeLineName = name,
             timeLineLoad = loadTL,
-            timeLineBackground = backgroundColor,
-            timeLineTextColor = textColor
+            timeLineBackground = backgroundColor
         )
     }
 

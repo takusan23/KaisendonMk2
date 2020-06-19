@@ -38,17 +38,13 @@ class LoadTimeLineEditBottomSheet : BottomSheetDialogFragment() {
             val timeLineData = item.timeline ?: return@launch
             // もとの値セット
             bottom_fragment_load_timeline_edit_background.setText(JSONObject(timeLineData).getString("background_color"))
-            bottom_fragment_load_timeline_edit_text_color.setText(JSONObject(timeLineData).getString("text_color"))
             // 保存ボタン
             bottom_fragment_load_timeline_edit_save.setOnClickListener {
                 // JSON再構成
                 val backgroundColor = bottom_fragment_load_timeline_edit_background.text.toString()
-                val textColor = bottom_fragment_load_timeline_edit_text_color.text.toString()
                 val timeLineJSON = JSONObject(timeLineData).apply {
                     remove("background_color")
-                    remove("text_color")
                     put("background_color", backgroundColor)
-                    put("text_color", textColor)
                 }.toString()
                 // 更新
                 GlobalScope.launch {

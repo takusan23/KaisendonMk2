@@ -6,11 +6,13 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.cardview.widget.CardView
+import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import androidx.core.text.HtmlCompat
 import androidx.preference.PreferenceManager
@@ -24,7 +26,6 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.shape.ShapeAppearanceModel
-import com.google.android.material.snackbar.Snackbar
 import io.github.takusan23.kaisendonmk2.BottomFragment.MisskeyReactionBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.QuickProfileBottomSheet
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
@@ -37,7 +38,6 @@ import io.github.takusan23.kaisendonmk2.MastodonAPI.StatusAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyNoteAPI
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyReactionAPI
 import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyNoteData
-import io.github.takusan23.kaisendonmk2.MisskeyDataClass.MisskeyReactionData
 import io.github.takusan23.kaisendonmk2.R
 import io.github.takusan23.kaisendonmk2.TimeLine.*
 import kotlinx.coroutines.Dispatchers
@@ -129,7 +129,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // こんてんとわーにんぐ
                     if (status.spoilerText.isEmpty()) {
                         // CW無し
-                        customEmoji.setCustomEmoji(contentTextView, status.content, status.allEmoji)
+                        customEmoji.setCustomEmoji(contentTextView, HtmlToString(status.content), status.allEmoji)
                         contentTextView.visibility = View.VISIBLE
                         cwButton.visibility = View.GONE
                         cwContentTextView.visibility = View.GONE
@@ -167,7 +167,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
                     // 見た目
-                    // setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                     // 画像表示
                     mediaLinearLayout.removeAllViews()
@@ -203,7 +203,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // QuickProfile
                     setQuickProfile(avatarImageView, notificationData.accountData)
                     // 見た目
-//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
@@ -240,7 +240,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
                     // 見た目
-//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
@@ -275,7 +275,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
                     // 見た目
-//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                     // 添付画像表示
                     loadAttachImage(mediaLinearLayout, status.fields)
@@ -309,7 +309,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         customEmoji.setCustomEmoji(contentTextView, notificationData.note.text.escapeToBrTag(), notificationData.note.emoji)
                     }
                     // 見た目
-//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
@@ -351,7 +351,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
                     // 見た目
-//                    setCardViewStyle(cardView, timeLineName, timeLineItemDataList.get(position).customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
@@ -549,6 +549,18 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         }
     }
 
+    // タイムラインの色セットする
+    private fun setColorLabel(colorLabel: View, customTimeLineData: CustomTimeLineData) {
+        // 色設定があれば
+        if (customTimeLineData.timeLineBackground.isNotEmpty()) {
+            colorLabel.setBackgroundColor(customTimeLineData.timeLineBackground.toColorInt())
+        } else {
+            // なければ端末のモードに従う
+            val color = if (isDarkMode(colorLabel.context)) "#000000" else "#ffffff"
+            colorLabel.setBackgroundColor(color.toColorInt())
+        }
+    }
+
     // CardViewの見た目
     private fun setCardViewStyle(cardView: CardView, textView: TextView, customTimeLineData: CustomTimeLineData) {
         (cardView as MaterialCardView).apply {
@@ -556,11 +568,6 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                 defaultTextColor = TextView(context).textColors
             }
             strokeWidth = 2
-            if (customTimeLineData.timeLineTextColor.isNotEmpty()) {
-                textView.setTextColor(Color.parseColor(customTimeLineData.timeLineTextColor))
-            } else {
-                textView.setTextColor(defaultTextColor)
-            }
             // 色設定があれば
             if (customTimeLineData.timeLineBackground.isNotEmpty()) {
                 setStrokeColor(ColorStateList.valueOf(Color.parseColor(customTimeLineData.timeLineBackground)))
@@ -796,6 +803,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // トゥートViewHolder
     inner class TootViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val colorLabel = itemView.findViewById<View>(R.id.adapter_timeline_color)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
@@ -816,6 +824,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // 通知ViewHolder
     inner class NotificationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val colorLabel = itemView.findViewById<View>(R.id.adapter_timeline_color)
         val notificationTextView =
             itemView.findViewById<TextView>(R.id.adapter_notification_type)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
@@ -828,6 +837,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // ブーストViewHolder
     inner class BoostViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val colorLabel = itemView.findViewById<View>(R.id.adapter_timeline_color)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
@@ -851,6 +861,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // Misskey Note ViewHolder
     inner class MisskeyNoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val colorLabel = itemView.findViewById<View>(R.id.adapter_timeline_color)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
@@ -869,6 +880,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // Misskey 通知ViewHolder
     inner class MisskeyNotificationViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val colorLabel = itemView.findViewById<View>(R.id.adapter_timeline_color)
         val notificationTextView = itemView.findViewById<TextView>(R.id.adapter_notification_type)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
@@ -880,6 +892,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     // Misskey Renote ViewHolder
     inner class MisskeyRenoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         // val cardView = itemView.findViewById<CardView>(R.id.adapter_timeline_cardview)
+        val colorLabel = itemView.findViewById<View>(R.id.adapter_timeline_color)
         val timeLineName = itemView.findViewById<TextView>(R.id.adapter_timeline_name)
         val nameTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_user_name)
         val idTextView = itemView.findViewById<TextView>(R.id.adapter_timeline_id)
@@ -916,5 +929,20 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         val preferences = PreferenceManager.getDefaultSharedPreferences(context)
         return preferences.getBoolean("timeline_setting_image_hide_mobile", false) && isConnectionMobileData(context)
     }
+
+    /** Html#fromHtml()すると最後に余分な改行が入るので消す */
+    private fun String.removeLastBreakLine(): CharSequence {
+        var returnString: CharSequence = ""
+        while (this[this.length - 1] == '\n') {
+            returnString = this.subSequence(0, this.length - 1);
+        }
+        return returnString
+    }
+
+    private fun HtmlToString(html: String): String {
+        val breakLine = html.replace("<br>", "\n")
+        return Html.fromHtml(breakLine, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
+    }
+
 
 }

@@ -166,7 +166,6 @@ class LoginActivity : AppCompatActivity() {
                     put("service", service)
                     put("load_tl", urlList[it])
                     put("background_color", "")
-                    put("text_color", "")
                     put("is_enable", false)
                     put("name", "${nameList[it]} | $instanceName")
                 }

@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.room.Room
 import com.bumptech.glide.Glide
@@ -361,6 +362,8 @@ class TimeLineFragment : Fragment() {
                 timeLineAdapter.mainActivity = mainActivity
             }
             adapter = timeLineAdapter
+            val itemDecoration = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
+            addItemDecoration(itemDecoration)
         }
     }
 
