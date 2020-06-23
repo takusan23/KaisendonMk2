@@ -159,23 +159,15 @@ class LoginActivity : AppCompatActivity() {
             val urlList = arrayListOf("home", "notification", "local")
             // TL追加
             repeat(3) {
-                // timelineのJSON
-                val jsonObject = JSONObject().apply {
-                    put("instance", instanceName)
-                    put("token", token)
-                    put("service", service)
-                    put("load_tl", urlList[it])
-                    put("background_color", "")
-                    put("is_enable", false)
-                    put("name", "${nameList[it]} | $instanceName")
-                }
                 // DBに追加
                 val customTimeLineDBEntity = CustomTimeLineDBEntity(
                     name = "${nameList[it]} | $instanceName",
                     instance = instanceName,
                     token = token,
-                    timeline = jsonObject.toString(),
+                    timeline = urlList[it],
                     isEnable = false,
+                    isWiFiOnly = false,
+                    labelColor = null,
                     service = service
                 )
                 customTimeLineDBDao.insert(customTimeLineDBEntity)

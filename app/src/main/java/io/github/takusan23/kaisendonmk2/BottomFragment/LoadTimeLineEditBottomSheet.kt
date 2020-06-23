@@ -27,31 +27,23 @@ class LoadTimeLineEditBottomSheet : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 読み込む
-        val timelineName = arguments?.getString("name", "") ?: return
+        val timelineColumnId = arguments?.getInt("id", 0) ?: return
 
         // データベース
         val customTimeLineDB = Room.databaseBuilder(requireContext(), CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
         val dao = customTimeLineDB.customTimeLineDBDao()
         // RoomはUIスレッドでは呼べないので
         GlobalScope.launch {
-            val item = dao.getAll().find { allTimeLineData -> allTimeLineData.name == timelineName } ?: return@launch
-            val timeLineData = item.timeline ?: return@launch
-            // もとの値セット
-            bottom_fragment_load_timeline_edit_background.setText(JSONObject(timeLineData).getString("background_color"))
-            // 保存ボタン
+            // DB取り出し
+            val data = dao.findById(timelineColumnId)
+            bottom_fragment_load_timeline_edit_background.setText(data.labelColor)
+            // 保存ボタン押したとき
             bottom_fragment_load_timeline_edit_save.setOnClickListener {
-                // JSON再構成
-                val backgroundColor = bottom_fragment_load_timeline_edit_background.text.toString()
-                val timeLineJSON = JSONObject(timeLineData).apply {
-                    remove("background_color")
-                    put("background_color", backgroundColor)
-                }.toString()
-                // 更新
+                // DB更新
                 GlobalScope.launch {
-                    item.timeline = timeLineJSON
-                    dao.update(item)
+                    val db = Room.databaseBuilder(requireContext(), CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
+                    db.customTimeLineDBDao().update(data)
                 }
-                dismiss()
             }
         }
     }

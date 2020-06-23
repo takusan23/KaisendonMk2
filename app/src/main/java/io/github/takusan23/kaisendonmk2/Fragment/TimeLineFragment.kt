@@ -19,18 +19,22 @@ import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
 import io.github.takusan23.kaisendonmk2.MainActivity
+import io.github.takusan23.kaisendonmk2.MastodonAPI.createInstanceToken
 import io.github.takusan23.kaisendonmk2.MisskeyAPI.MisskeyTimeLineAPI
 import io.github.takusan23.kaisendonmk2.R
 import io.github.takusan23.kaisendonmk2.StreamingAPI.MisskeyStreamingAPI
 import io.github.takusan23.kaisendonmk2.StreamingAPI.StreamingAPI
+import io.github.takusan23.kaisendonmk2.TimeLine.isConnectionMobileData
 import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import io.github.takusan23.kaisendonmk2.TimeLine.toUnixTime
-import io.github.takusan23.kaisendonmk2.Tool.CustomTimeLineDataJSON
 import kotlinx.android.synthetic.main.fragment_timeline.*
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.io.File
 
+/**
+ * タイムラインFragment。あけおめ
+ * */
 class TimeLineFragment : Fragment() {
 
     lateinit var mainActivity: MainActivity
@@ -59,10 +63,6 @@ class TimeLineFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_timeline, container, false)
-    }
-
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -121,9 +121,11 @@ class TimeLineFragment : Fragment() {
             val dao = customTimeLineDB.customTimeLineDBDao()
             dao.getAll().forEach { customTimeLineEntity ->
                 // タイムライン構成JSON
-                val timeLineData = CustomTimeLineDataJSON().parse(customTimeLineEntity.timeline)
-                // 有効時 で 通知以外
-                if (customTimeLineEntity.isEnable && timeLineData != null && timeLineData.timeLineLoad != "notification") {
+                // val timeLineData = CustomTimeLineDataJSON().parse(customTimeLineEntity.timeline)
+                // 有効時 か Wi-Fi利用時のみはモバイルデータ以外かどうかを確認して それでなお 通知以外
+                if (customTimeLineEntity.isEnable || customTimeLineEntity.isWiFiOnly == !isConnectionMobileData(context) && customTimeLineEntity.timeline != "notification") {
+                    // 認証情報
+                    val instanceToken = customTimeLineEntity.createInstanceToken()
                     // くるくるなかったら表示
                     withContext(Dispatchers.Main) {
                         if (fragment_timeline_swipe?.isRefreshing == false) {
@@ -134,19 +136,19 @@ class TimeLineFragment : Fragment() {
                         // 取得件数
                         val limit = prefSetting.getString("setting_load_limit_mastodon", "40")?.toInt() ?: 40
                         // TL取得
-                        val timeLineAPI = TimeLineAPI(timeLineData.instanceToken)
+                        val timeLineAPI = TimeLineAPI(instanceToken)
                         val timeLineParser = TimeLineParser()
-                        val response = when (timeLineData.timeLineLoad) {
-                            "home" -> timeLineAPI.getHomeTimeLine(limit).await()
-                            "local" -> timeLineAPI.getLocalTimeLine(limit).await()
-                            else -> timeLineAPI.getHomeTimeLine(limit).await()
+                        val response = when (customTimeLineEntity.timeline) {
+                            "home" -> timeLineAPI.getHomeTimeLine(limit)
+                            "local" -> timeLineAPI.getLocalTimeLine(limit)
+                            else -> timeLineAPI.getHomeTimeLine(limit)
                         }
                         // 成功したか
                         response.apply {
                             if (isSuccessful) {
                                 // 追加
-                                timeLineParser.parseTL(this.response?.body?.string(), timeLineData.instanceToken).forEach { statusData ->
-                                    val timeLineItemData = TimeLineItemData(timeLineData, statusData)
+                                timeLineParser.parseTL(this.response?.body?.string(), instanceToken).forEach { statusData ->
+                                    val timeLineItemData = TimeLineItemData(customTimeLineEntity, statusData)
                                     timeLineItemDataList.add(timeLineItemData)
                                 }
                             } else {
@@ -158,9 +160,9 @@ class TimeLineFragment : Fragment() {
                         // Misskey TL取得
                         // 取得件数
                         val limit = prefSetting.getString("setting_load_limit_misskey", "100")?.toInt() ?: 100
-                        val misskeyTimeLineAPI = MisskeyTimeLineAPI(timeLineData.instanceToken)
+                        val misskeyTimeLineAPI = MisskeyTimeLineAPI(instanceToken)
                         val misskeyParser = MisskeyParser()
-                        val response = when (timeLineData.timeLineLoad) {
+                        val response = when (customTimeLineEntity.timeline) {
                             "home" -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await()
                             "local" -> misskeyTimeLineAPI.getLocalNotesTimeLine(limit).await()
                             else -> misskeyTimeLineAPI.getHomeNotesTimeLine(limit).await()
@@ -169,8 +171,8 @@ class TimeLineFragment : Fragment() {
                         response.apply {
                             if (isSuccessful) {
                                 // 追加
-                                misskeyParser.parseTimeLine(this.response?.body?.string(), timeLineData.instanceToken).forEach { misskeyNoteData ->
-                                    val timeLineItemData = TimeLineItemData(timeLineData, null, null, misskeyNoteData, null)
+                                misskeyParser.parseTimeLine(this.response?.body?.string(), instanceToken).forEach { misskeyNoteData ->
+                                    val timeLineItemData = TimeLineItemData(customTimeLineEntity, null, null, misskeyNoteData, null)
                                     timeLineItemDataList.add(timeLineItemData)
                                 }
                             } else {
@@ -236,46 +238,47 @@ class TimeLineFragment : Fragment() {
             val dao = customTimeLineDB.customTimeLineDBDao()
             dao.getAll().forEach { customTimeLineEntity ->
                 // タイムライン構成JSON
-                val timeLineData = CustomTimeLineDataJSON().parse(customTimeLineEntity.timeline)
                 // 有効時
-                if (customTimeLineEntity.isEnable && timeLineData != null) {
-                    if (timeLineData.service == "mastodon") {
+                if (customTimeLineEntity.isEnable && customTimeLineEntity.isWiFiOnly == !isConnectionMobileData(context)) {
+                    // 認証情報
+                    val instanceToken = customTimeLineEntity.createInstanceToken()
+                    if (customTimeLineEntity.service == "mastodon") {
                         // Mastodon
                         // TL取得
-                        val streamingAPI = StreamingAPI(timeLineData.instanceToken)
-                        val isHome = timeLineData.timeLineLoad.contains("home")
-                        val isNotification = timeLineData.timeLineLoad.contains("notification")
-                        val isLocal = timeLineData.timeLineLoad.contains("local")
+                        val streamingAPI = StreamingAPI(instanceToken)
+                        val isHome = customTimeLineEntity.timeline.contains("home")
+                        val isNotification = customTimeLineEntity.timeline.contains("notification")
+                        val isLocal = customTimeLineEntity.timeline.contains("local")
                         when {
                             // ホームか通知なら
                             isHome || isNotification -> streamingAPI.streamingUser({ statusData ->
                                 // タイムライン
                                 if (isHome) {
-                                    addStreamingTLItem(TimeLineItemData(timeLineData, statusData))
+                                    addStreamingTLItem(TimeLineItemData(customTimeLineEntity, statusData))
                                 }
                             }) { notificationData ->
                                 // 通知
                                 if (isNotification) {
-                                    addStreamingTLItem(TimeLineItemData(timeLineData, null, notificationData))
+                                    addStreamingTLItem(TimeLineItemData(customTimeLineEntity, null, notificationData))
                                 }
                             }
                             isLocal -> streamingAPI.streamingLocalTL { statusData ->
                                 // タイムライン
-                                addStreamingTLItem(TimeLineItemData(timeLineData, statusData))
+                                addStreamingTLItem(TimeLineItemData(customTimeLineEntity, statusData))
                             }
                             else -> streamingAPI.streamingLocalTL { statusData ->
                                 // タイムライン
-                                addStreamingTLItem(TimeLineItemData(timeLineData, statusData))
+                                addStreamingTLItem(TimeLineItemData(customTimeLineEntity, statusData))
                             }
                         }
                         streamingAPIList.add(streamingAPI)
                     } else {
                         // Misskey
-                        val misskeyStreamingAPI = MisskeyStreamingAPI(timeLineData.instanceToken)
+                        val misskeyStreamingAPI = MisskeyStreamingAPI(instanceToken)
                         val misskeyParser = MisskeyParser()
-                        val isHome = timeLineData.timeLineLoad.contains("home")
-                        val isNotification = timeLineData.timeLineLoad.contains("notification")
-                        val isLocal = timeLineData.timeLineLoad.contains("local")
+                        val isHome = customTimeLineEntity.timeline.contains("home")
+                        val isNotification = customTimeLineEntity.timeline.contains("notification")
+                        val isLocal = customTimeLineEntity.timeline.contains("local")
                         val streamingChannel = arrayListOf<String>()
                         when {
                             isHome -> streamingChannel.add(MisskeyStreamingAPI.CHANNEL_HOME)
@@ -288,13 +291,13 @@ class TimeLineFragment : Fragment() {
                             when (jsonObject.getJSONObject("body").getString("type")) {
                                 "note" -> {
                                     // 投稿
-                                    val noteData = misskeyParser.parseNote(jsonObject.getJSONObject("body").getJSONObject("body").toString(), timeLineData.instanceToken)
-                                    addStreamingTLItem(TimeLineItemData(timeLineData, null, null, noteData, null))
+                                    val noteData = misskeyParser.parseNote(jsonObject.getJSONObject("body").getJSONObject("body").toString(), instanceToken)
+                                    addStreamingTLItem(TimeLineItemData(customTimeLineEntity, null, null, noteData, null))
                                 }
                                 "notification" -> {
                                     // 通知
-                                    val notificationData = misskeyParser.parseNotification(jsonObject.getJSONObject("body").getJSONObject("body").toString(), timeLineData.instanceToken)
-                                    addStreamingTLItem(TimeLineItemData(timeLineData, null, null, null, notificationData))
+                                    val notificationData = misskeyParser.parseNotification(jsonObject.getJSONObject("body").getJSONObject("body").toString(), instanceToken)
+                                    addStreamingTLItem(TimeLineItemData(customTimeLineEntity, null, null, null, notificationData))
                                 }
                             }
                         }
@@ -355,7 +358,7 @@ class TimeLineFragment : Fragment() {
         fragment_timeline_recyclerview?.apply {
             setHasFixedSize(true)
             // なんかかっこいいやつ
-            column = prefSetting.getString("setting_tl_column", "2")?.toInt() ?: 2
+            column = prefSetting.getString("setting_tl_column", "1")?.toInt() ?: 1
             layoutManager = StaggeredGridLayoutManager(column, StaggeredGridLayoutManager.VERTICAL)
             timeLineAdapter = TimelineRecyclerViewAdapter(timeLineItemDataList)
             if (::mainActivity.isInitialized) {

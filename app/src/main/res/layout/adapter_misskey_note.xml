@@ -75,7 +75,8 @@
                         android:id="@+id/adapter_timeline_content"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:autoLink="web" />
+                        android:autoLink="web"
+                        android:padding="5dp" />
                 </LinearLayout>
 
             </LinearLayout>

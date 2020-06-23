@@ -1,32 +1,29 @@
 package io.github.takusan23.kaisendonmk2.Adapter
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.Switch
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import io.github.takusan23.kaisendonmk2.BottomFragment.LoadTimeLineEditBottomSheet
-import io.github.takusan23.kaisendonmk2.BottomFragment.LoadTimeLineListBottomSheet
 import io.github.takusan23.kaisendonmk2.DetaBase.Dao.CustomTimeLineDBDao
 import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
 import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB
-import io.github.takusan23.kaisendonmk2.MainActivity
 import io.github.takusan23.kaisendonmk2.R
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * タイムラインの構成一覧表示のAdapter
  * */
 class CustomTimeLineItemsListAdapter(val customTimeLineList: ArrayList<CustomTimeLineDBEntity>) : RecyclerView.Adapter<CustomTimeLineItemsListAdapter.ViewHolder>() {
 
-    lateinit var mainActivity: MainActivity
-    lateinit var loadTimeLineListBottomSheet: LoadTimeLineListBottomSheet
     lateinit var customTimeLineDB: CustomTimeLineDB
     lateinit var customTimeLineDBDao: CustomTimeLineDBDao
 
@@ -42,7 +39,7 @@ class CustomTimeLineItemsListAdapter(val customTimeLineList: ArrayList<CustomTim
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.apply {
             // Context
-            val context = allTimeLineAdapterSwitch.context
+            val context = enableSwitch.context
             if (!::customTimeLineDB.isInitialized) {
                 customTimeLineDB = Room.databaseBuilder(context, CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
                 customTimeLineDBDao = customTimeLineDB.customTimeLineDBDao()
@@ -50,40 +47,58 @@ class CustomTimeLineItemsListAdapter(val customTimeLineList: ArrayList<CustomTim
 
             // 値入れる
             val allTimeLineData = customTimeLineList[position]
-            allTimeLineAdapterSwitch.isChecked = allTimeLineData.isEnable
-            allTimeLineAdapterSwitch.text = allTimeLineData.name
+            enableSwitch.isChecked = allTimeLineData.isEnable
+            wifiSwitch.isChecked = allTimeLineData.isWiFiOnly
+            nameTextView.text = allTimeLineData.name
 
             // スイッチ
-            allTimeLineAdapterSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            enableSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
                 // なんと isPressed を使うことでなにもしてないのにリスナーが動いた時でも大丈夫（リサイクラービューは使い回されるので）
                 if (buttonView.isPressed) {
                     // 有効/無効を反転
-                    customTimeLineList[position].isEnable = isChecked
-                    GlobalScope.launch {
-                        val db = Room.databaseBuilder(context, CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
-                        val item = db.customTimeLineDBDao().findById(allTimeLineData.id)
-                        item.isEnable = isChecked
-                        customTimeLineDBDao.update(item)
-                    }
+                    updateEnableDB(context, allTimeLineData.id, isEnable = isChecked, isWiFiOnly = allTimeLineData.isWiFiOnly)
+                }
+            }
+
+            // Wi-Fiのみ
+            wifiSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+                if (buttonView.isPressed) {
+                    // 有効/無効を反転
+                    updateEnableDB(context, allTimeLineData.id, isEnable = allTimeLineData.isEnable, isWiFiOnly = isChecked)
                 }
             }
 
             // 見た目
-            allTimeLineAdapterStyle.setOnClickListener {
+            editButton.setOnClickListener {
                 val loadTimeLineEditBottomSheet = LoadTimeLineEditBottomSheet()
-                val bundle = Bundle().apply {
-                    putString("name", allTimeLineData.name)
-                }
+                val bundle = Bundle()
+                bundle.putInt("id", allTimeLineData.id)
                 loadTimeLineEditBottomSheet.arguments = bundle
-                loadTimeLineEditBottomSheet.show(mainActivity.supportFragmentManager, "style")
+                loadTimeLineEditBottomSheet.show((context as AppCompatActivity).supportFragmentManager, "style")
             }
 
         }
     }
 
+    /**
+     * DBの有効、無効を更新する
+     * */
+    private fun updateEnableDB(context: Context, id: Int, isEnable: Boolean = true, isWiFiOnly: Boolean = false) {
+        GlobalScope.launch {
+            val db = Room.databaseBuilder(context, CustomTimeLineDB::class.java, "CustomTimeLineDB").build()
+            val item = db.customTimeLineDBDao().findById(id)
+            item.isEnable = isEnable
+            item.isWiFiOnly = isWiFiOnly
+            customTimeLineDBDao.update(item)
+        }
+    }
+
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val allTimeLineAdapterSwitch = itemView.findViewById<Switch>(R.id.adapter_all_tl_setting_switch)
-        val allTimeLineAdapterStyle = itemView.findViewById<ImageView>(R.id.adapter_tl_setting_color)
+        val enableSwitch = itemView.findViewById<Switch>(R.id.adapter_tl_setting_switch_enable)
+        val wifiSwitch = itemView.findViewById<Switch>(R.id.adapter_tl_setting_switch_wifi)
+        val nameTextView = itemView.findViewById<TextView>(R.id.adapter_tl_setting_name)
+        val editButton = itemView.findViewById<ImageView>(R.id.adapter_tl_setting_edit)
+        //  val allTimeLineAdapterStyle = itemView.findViewById<ImageView>(R.id.adapter_tl_setting_color)
     }
 
 }

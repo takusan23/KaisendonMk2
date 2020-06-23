@@ -10,6 +10,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import io.github.takusan23.kaisendonmk2.Activity.LoginActivity
 import io.github.takusan23.kaisendonmk2.Activity.PreferenceActivity
+import io.github.takusan23.kaisendonmk2.Activity.TimeLineEditActivity
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
 import io.github.takusan23.kaisendonmk2.JSONParse.TimeLineParser
 import io.github.takusan23.kaisendonmk2.MainActivity
@@ -42,9 +43,8 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
 
         // 読み込むタイムラインの設定
         bottom_fragment_menu_load_timeline_edit.setOnClickListener {
-            val loadTimeLineListBottomSheet = LoadTimeLineListBottomSheet()
-            loadTimeLineListBottomSheet.mainActivity = mainActivity
-            loadTimeLineListBottomSheet.show(childFragmentManager, "timeline_setting_list")
+            val editActivity = Intent(context, TimeLineEditActivity::class.java)
+            startActivity(editActivity)
         }
 
         // TL設定

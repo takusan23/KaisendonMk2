@@ -20,7 +20,9 @@ import io.github.takusan23.kaisendonmk2.R
 import kotlinx.android.synthetic.main.bottom_fragment_timeline_setting.*
 import java.io.File
 
-
+/**
+ * TL設定BottomFragment。画像非表示など
+ * */
 class TimeLineSettingBottomSheet : BottomSheetDialogFragment() {
 
     lateinit var prefSetting: SharedPreferences
@@ -74,13 +76,7 @@ class TimeLineSettingBottomSheet : BottomSheetDialogFragment() {
     private fun deleteFont() {
         val file = File("${context?.getExternalFilesDir(null)}/font.ttf")
         file.delete()
-        (activity as? MainActivity)?.apply {
-            if (isTabTLMode) {
-                getTabLayoutAttachTimeLineFragmentList().forEach { fragment -> fragment.timelineRecyclerViewAdapter.font = Typeface.DEFAULT }
-            } else {
-                getTimeLineFragment().timeLineAdapter.font = Typeface.DEFAULT
-            }
-        }
+        (activity as? MainActivity)?.getTimeLineFragment()?.timeLineAdapter?.font = Typeface.DEFAULT
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -103,13 +99,7 @@ class TimeLineSettingBottomSheet : BottomSheetDialogFragment() {
                         imageFile.writeBytes(byteArray)
                     }
                     // 適用
-                    (activity as? MainActivity)?.apply {
-                        if (isTabTLMode) {
-                            getTabLayoutAttachTimeLineFragmentList().forEach { fragment -> fragment.setTimeLineBackgroundImage() }
-                        } else {
-                            getTimeLineFragment().setTimeLineBackgroundImage()
-                        }
-                    }
+                    (activity as? MainActivity)?.getTimeLineFragment()?.setTimeLineBackgroundImage()
                 }
                 FONT_REQUEST_CODE -> {
                     // フォント設定
@@ -124,13 +114,7 @@ class TimeLineSettingBottomSheet : BottomSheetDialogFragment() {
                         file.writeBytes(byteArray)
                     }
                     // Adapterに適用
-                    (activity as? MainActivity)?.apply {
-                        if (isTabTLMode) {
-                            getTabLayoutAttachTimeLineFragmentList().forEach { fragment -> fragment.setFont() }
-                        } else {
-                            getTimeLineFragment().setFont()
-                        }
-                    }
+                    (activity as? MainActivity)?.getTimeLineFragment()?.setFont()
                 }
             }
         }
@@ -162,14 +146,7 @@ class TimeLineSettingBottomSheet : BottomSheetDialogFragment() {
             }
         }
         // 適用
-        (activity as? MainActivity)?.apply {
-            if (isTabTLMode) {
-                getTabLayoutAttachTimeLineFragmentList().forEach { fragment -> fragment.setTimeLineBackgroundImage() }
-            } else {
-                getTimeLineFragment().setTimeLineBackgroundImage()
-            }
-
-        }
+        (activity as? MainActivity)?.getTimeLineFragment()?.setTimeLineBackgroundImage()
     }
 
     /**

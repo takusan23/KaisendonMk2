@@ -27,6 +27,9 @@ interface CustomTimeLineDBDao {
     @Query("DELETE FROM CustomTimeLineDBEntity WHERE token = :token")
     fun accountDelete(token: String)
 
+    /**
+     * 主キー指定でデータベース取得する
+     * */
     @Query("SELECT * FROM CustomTimeLineDBEntity WHERE id = :id")
     fun findById(id: Int): CustomTimeLineDBEntity
 

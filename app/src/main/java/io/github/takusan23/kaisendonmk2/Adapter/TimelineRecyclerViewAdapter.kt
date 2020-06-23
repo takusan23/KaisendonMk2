@@ -6,7 +6,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,7 +28,6 @@ import com.google.android.material.shape.ShapeAppearanceModel
 import io.github.takusan23.kaisendonmk2.BottomFragment.MisskeyReactionBottomSheet
 import io.github.takusan23.kaisendonmk2.BottomFragment.QuickProfileBottomSheet
 import io.github.takusan23.kaisendonmk2.CustomEmoji.CustomEmoji
-import io.github.takusan23.kaisendonmk2.DataClass.CustomTimeLineData
 import io.github.takusan23.kaisendonmk2.DataClass.StatusData
 import io.github.takusan23.kaisendonmk2.DataClass.TimeLineItemData
 import io.github.takusan23.kaisendonmk2.JSONParse.MisskeyParser
@@ -123,7 +121,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val context = nameTextView.context
                     val status = timeLineItemDataList.get(position).statusData ?: return
                     // TL名
-                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineDBEntity.name
                     // トゥート表示
                     idTextView.text = "@${status.accountData.acct}"
                     // こんてんとわーにんぐ
@@ -167,7 +165,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineDBEntity.labelColor)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                     // 画像表示
                     mediaLinearLayout.removeAllViews()
@@ -181,7 +179,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val context = nameTextView.context
                     val notificationData = timeLineItemDataList.get(position).notificationData ?: return
                     // TL名
-                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineDBEntity.name
                     // 通知タイプ
                     notificationTextView.text = when (notificationData.type) {
                         "favourite" -> context.getText(R.string.notification_favourite)
@@ -203,7 +201,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // QuickProfile
                     setQuickProfile(avatarImageView, notificationData.accountData)
                     // 見た目
-                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineDBEntity.labelColor)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
@@ -214,7 +212,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val status = timeLineItemDataList.get(position).statusData ?: return
                     val reblogStatus = status.reblogStatusData ?: return
                     // TL名
-                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineDBEntity.name
                     // ブースト元トゥート表示
                     boostIDTextView.text = "@${reblogStatus.accountData.acct}"
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.accountData.displayName, reblogStatus.accountData.allEmoji)
@@ -240,7 +238,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineDBEntity.labelColor)
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
@@ -251,7 +249,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val context = nameTextView.context
                     val status = timeLineItemDataList.get(position).misskeyNoteData ?: return
                     // TL名
-                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineDBEntity.name
                     // トゥート表示
                     idTextView.text = "@${status.user.username}"
                     customEmoji.setCustomEmoji(nameTextView, status.user.name, status.user.emoji)
@@ -275,7 +273,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineDBEntity.labelColor)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                     // 添付画像表示
                     loadAttachImage(mediaLinearLayout, status.fields)
@@ -287,7 +285,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val context = nameTextView.context
                     val notificationData = timeLineItemDataList.get(position).misskeyNotificationData ?: return
                     // TL名
-                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineDBEntity.name
                     // 通知タイプ
                     notificationTextView.text = when (notificationData.type) {
                         "reaction" -> notificationData.reaction
@@ -309,7 +307,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                         customEmoji.setCustomEmoji(contentTextView, notificationData.note.text.escapeToBrTag(), notificationData.note.emoji)
                     }
                     // 見た目
-                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineDBEntity.labelColor)
                     setFont(nameTextView, idTextView, contentTextView, timeLineName)
                 }
             }
@@ -320,7 +318,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     val status = timeLineItemDataList.get(position).misskeyNoteData ?: return
                     val reblogStatus = status.renote ?: return
                     // TL名
-                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineData.timeLineName
+                    timeLineName.text = timeLineItemDataList.get(position).customTimeLineDBEntity.name
                     // ブースト元トゥート表示
                     boostIDTextView.text = "@${reblogStatus.user.username}"
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.user.name, reblogStatus.user.emoji)
@@ -351,7 +349,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // 詳細表示
                     initMisskeyInfo(moreButton, infoTextView, status)
                     // 見た目
-                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineData)
+                    setColorLabel(colorLabel, timeLineItemDataList[position].customTimeLineDBEntity.labelColor)
                     setFont(boostNameTextView, boostIDTextView, boostContentTextView, nameTextView, idTextView, contentTextView, timeLineName, favoutiteButton, boostButton)
                 }
             }
@@ -550,36 +548,14 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
     }
 
     // タイムラインの色セットする
-    private fun setColorLabel(colorLabel: View, customTimeLineData: CustomTimeLineData) {
+    private fun setColorLabel(colorLabel: View, labelColor: String?) {
         // 色設定があれば
-        if (customTimeLineData.timeLineBackground.isNotEmpty()) {
-            colorLabel.setBackgroundColor(customTimeLineData.timeLineBackground.toColorInt())
+        if (labelColor?.isNotEmpty() == true) {
+            colorLabel.setBackgroundColor(labelColor.toColorInt())
         } else {
             // なければ端末のモードに従う
             val color = if (isDarkMode(colorLabel.context)) "#000000" else "#ffffff"
             colorLabel.setBackgroundColor(color.toColorInt())
-        }
-    }
-
-    // CardViewの見た目
-    private fun setCardViewStyle(cardView: CardView, textView: TextView, customTimeLineData: CustomTimeLineData) {
-        (cardView as MaterialCardView).apply {
-            if (!::defaultTextColor.isInitialized) {
-                defaultTextColor = TextView(context).textColors
-            }
-            strokeWidth = 2
-            // 色設定があれば
-            if (customTimeLineData.timeLineBackground.isNotEmpty()) {
-                setStrokeColor(ColorStateList.valueOf(Color.parseColor(customTimeLineData.timeLineBackground)))
-            } else {
-                setStrokeColor(ColorStateList.valueOf(Color.parseColor("#757575")))
-            }
-            if (isDarkMode(context)) {
-                setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#000000")))
-            } else {
-                setCardBackgroundColor(ColorStateList.valueOf(Color.parseColor("#ffffff")))
-            }
-            alpha = 0.8F
         }
     }
 
@@ -941,7 +917,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
 
     private fun HtmlToString(html: String): String {
         val breakLine = html.replace("<br>", "\n")
-        return Html.fromHtml(breakLine, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
+        return HtmlCompat.fromHtml(breakLine, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
     }
 
 

@@ -14,7 +14,7 @@
         android:title="@string/setting_load_limit_misskey_title" />
 
     <EditTextPreference
-        android:defaultValue="2"
+        android:defaultValue="1"
         android:key="setting_tl_column"
         android:summary="@string/setting_column_description"
         android:title="@string/setting_column_title" />
@@ -24,11 +24,13 @@
         android:key="setting_not_sleep"
         android:title="@string/setting_not_sleep" />
 
+<!--
     <SwitchPreference
         android:icon="@drawable/ic_view_carousel_black_24dp"
         android:key="setting_tablayout_mode"
         android:summary="スワイプでTLを切り替えられるようになります。"
         android:title="代わりにタブレイアウトを利用する（実験要素）" />
+-->
 
     <Preference android:title="@string/license">
         <intent
