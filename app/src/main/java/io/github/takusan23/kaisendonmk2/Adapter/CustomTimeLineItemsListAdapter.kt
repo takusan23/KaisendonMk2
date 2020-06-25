@@ -20,6 +20,7 @@ import io.github.takusan23.kaisendonmk2.DetaBase.Dao.CustomTimeLineDBDao
 import io.github.takusan23.kaisendonmk2.DetaBase.Entity.CustomTimeLineDBEntity
 import io.github.takusan23.kaisendonmk2.DetaBase.RoomDataBase.CustomTimeLineDB
 import io.github.takusan23.kaisendonmk2.R
+import io.github.takusan23.kaisendonmk2.TimeLine.setNullTint
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import okhttp3.internal.toHexString
@@ -59,6 +60,8 @@ class CustomTimeLineItemsListAdapter(val customTimeLineList: ArrayList<CustomTim
             val labelColor = allTimeLineData.labelColor
             if (labelColor?.isNotEmpty() == true) {
                 styleButton.imageTintList = ColorStateList.valueOf(Color.parseColor(labelColor))
+            } else {
+                styleButton.setNullTint()
             }
 
             // スイッチ

@@ -65,7 +65,7 @@ class AccountListBottomFragment : BottomSheetDialogFragment() {
                     val misskeyParser = MisskeyParser()
                     if (accountResponse.isSuccessful) {
                         val userData = misskeyParser.parseUser(accountResponse.body?.string()!!, it)
-                        val data = AccountListData(service = "mastodon", instanceToken = it, misskeyUserData = userData)
+                        val data = AccountListData(service = "misskey", instanceToken = it, misskeyUserData = userData)
                         accountDataList.add(data)
                     }
                     withContext(Dispatchers.Main) { accountListAdapter.notifyDataSetChanged() }
