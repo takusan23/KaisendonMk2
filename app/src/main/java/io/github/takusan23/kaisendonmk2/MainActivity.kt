@@ -40,16 +40,14 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_timeline.*
 import kotlinx.coroutines.*
 
-
-class MainActivity : AppCompatActivity() {
+// ↓open これFloatingTLActivity で継承して使うので open ついてる
+open class MainActivity : AppCompatActivity() {
 
     lateinit var prefSetting: SharedPreferences
 
     lateinit var postInstanceToken: InstanceToken // Toot投稿用アカウント
     var postVisibility = "public"   // 投稿する時に使う公開範囲
     var isMisskeyLocalOnly = false // Misskeyのローカルのみ公開のやつ
-
-    var isTabTLMode = false // タブレイアウトモード有効時true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

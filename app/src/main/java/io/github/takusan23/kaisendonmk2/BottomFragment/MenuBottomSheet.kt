@@ -2,12 +2,14 @@ package io.github.takusan23.kaisendonmk2.BottomFragment
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.preference.PreferenceManager
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import io.github.takusan23.kaisendonmk2.Activity.FloatingTLActivity
 import io.github.takusan23.kaisendonmk2.Activity.LoginActivity
 import io.github.takusan23.kaisendonmk2.Activity.PreferenceActivity
 import io.github.takusan23.kaisendonmk2.Activity.TimeLineEditActivity
@@ -69,6 +71,14 @@ class MenuBottomSheet : BottomSheetDialogFragment() {
         bottom_fragment_menu_setting.setOnClickListener {
             val intent = Intent(context, PreferenceActivity::class.java)
             startActivity(intent)
+        }
+
+        // フローティングコメビュ
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            bottom_fragment_menu_load_floating_tl.visibility = View.VISIBLE
+        }
+        bottom_fragment_menu_load_floating_tl.setOnClickListener {
+            FloatingTLActivity.showBubbles(context)
         }
 
     }

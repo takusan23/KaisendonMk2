@@ -100,4 +100,5 @@
     <string name="fav_bt_message">お気に入りとブーストを行っていいですか？</string>
     <string name="fav_bt_button">Fav+BT</string>
     <string name="fav_bt_ok">Fav+BTできました。</string>
+    <string name="floating_tl">フローティングタイムライン</string>
 </resources>

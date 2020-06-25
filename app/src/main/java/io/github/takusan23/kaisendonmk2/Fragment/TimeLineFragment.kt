@@ -1,7 +1,12 @@
 package io.github.takusan23.kaisendonmk2.Fragment
 
+import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Typeface
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -77,7 +82,6 @@ class TimeLineFragment : Fragment() {
             // 背景画像とかフォントとか
             setTimeLineBackgroundImage()
             setFont()
-
             // 画面回転時
             if (savedInstanceState != null) {
                 ArrayList(savedInstanceState.getSerializable("list") as ArrayList<TimeLineItemData>).forEach {
@@ -107,7 +111,6 @@ class TimeLineFragment : Fragment() {
         }
 
     }
-
 
     // 表示するタイムライン読み込み
     fun initAllTimeLine() = GlobalScope.async(Dispatchers.Main) {

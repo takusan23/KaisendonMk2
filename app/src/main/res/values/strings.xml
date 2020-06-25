@@ -99,4 +99,5 @@
     <string name="fav_bt_message">Can I boost my favorites and boost them?</string>
     <string name="fav_bt_button">fav+bt</string>
     <string name="fav_bt_ok">I made Fav+BT.</string>
+    <string name="floating_tl">Floating TL</string>
 </resources>

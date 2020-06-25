@@ -20,7 +20,7 @@ internal fun isConnectionMobileData(context: Context?): Boolean {
             return true
         }
     } else {
-        if (connectivityManager.activeNetworkInfo.type == ConnectivityManager.TYPE_MOBILE) {
+        if (connectivityManager.activeNetworkInfo?.type == ConnectivityManager.TYPE_MOBILE) {
             return true
         }
     }
