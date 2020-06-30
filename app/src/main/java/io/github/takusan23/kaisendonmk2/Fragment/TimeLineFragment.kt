@@ -242,7 +242,7 @@ class TimeLineFragment : Fragment() {
             dao.getAll().forEach { customTimeLineEntity ->
                 // タイムライン構成JSON
                 // 有効時
-                if (customTimeLineEntity.isEnable && customTimeLineEntity.isWiFiOnly == !isConnectionMobileData(context)) {
+                if (customTimeLineEntity.isEnable || customTimeLineEntity.isWiFiOnly == !isConnectionMobileData(context)) {
                     // 認証情報
                     val instanceToken = customTimeLineEntity.createInstanceToken()
                     if (customTimeLineEntity.service == "mastodon") {
