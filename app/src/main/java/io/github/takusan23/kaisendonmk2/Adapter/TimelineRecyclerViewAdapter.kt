@@ -216,7 +216,7 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
                     // ブースト元トゥート表示
                     boostIDTextView.text = "@${reblogStatus.accountData.acct}"
                     customEmoji.setCustomEmoji(boostNameTextView, reblogStatus.accountData.displayName, reblogStatus.accountData.allEmoji)
-                    customEmoji.setCustomEmoji(boostContentTextView, reblogStatus.content, reblogStatus.allEmoji)
+                    customEmoji.setCustomEmoji(boostContentTextView, HtmlToString(reblogStatus.content), reblogStatus.allEmoji)
                     boostAvatarImageView.setNullTint()
                     // QuickProfile
                     setQuickProfile(boostAvatarImageView, reblogStatus.accountData)
@@ -506,12 +506,21 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
      * */
     private fun createAttachMediaImageView(linearLayout: LinearLayout): ImageView {
         // ImageView生成からザイズ変更
+        val preferences = PreferenceManager.getDefaultSharedPreferences(linearLayout.context)
         val imageView = ImageView(linearLayout.context)
         val layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 300)
         layoutParams.weight = 1F
         layoutParams.setMargins(5, 5, 5, 5)
         imageView.layoutParams = layoutParams
-        imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+        /**
+         * 添付画像をトリミングして最適化すると裁判になるらしいので設定を用意した。（著作表記のところが見切れてるのがだめだったらしい？）
+         * https://www.courts.go.jp/app/hanrei_jp/detail2?id=89597
+         * */
+        imageView.scaleType = if (preferences.getBoolean("setting_attach_media_not_trim", false)) {
+            ImageView.ScaleType.FIT_CENTER
+        } else {
+            ImageView.ScaleType.CENTER_CROP
+        }
         imageView.setNullTint()
         linearLayout.addView(imageView)
         return imageView
@@ -915,10 +924,8 @@ class TimelineRecyclerViewAdapter(val timeLineItemDataList: ArrayList<TimeLineIt
         return returnString
     }
 
-    private fun HtmlToString(html: String): String {
-        val breakLine = html.replace("<br>", "\n")
-        return HtmlCompat.fromHtml(breakLine, HtmlCompat.FROM_HTML_MODE_COMPACT).toString()
-    }
+    // p タグを消し飛ばす関数。これしないと fromHtml で変な改行がはいる
+    private fun HtmlToString(html: String) = html.replace("<p>", "").replace("</p>", "")
 
 
 }

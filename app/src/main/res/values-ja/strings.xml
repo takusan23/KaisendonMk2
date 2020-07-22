@@ -101,4 +101,6 @@
     <string name="fav_bt_button">Fav+BT</string>
     <string name="fav_bt_ok">Fav+BTできました。</string>
     <string name="floating_tl">フローティングタイムライン</string>
+    <string name="setting_attach_media_not_trim_title">添付画像をトリミングしない</string>
+    <string name="setting_attach_media_not_trim_description">本当はタイムライン上で見やすくするために拡大をするのが一番良いのですが、著作権表記の部分が見切れる可能性があるため。</string>
 </resources>

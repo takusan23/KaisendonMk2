@@ -100,4 +100,6 @@
     <string name="fav_bt_button">fav+bt</string>
     <string name="fav_bt_ok">I made Fav+BT.</string>
     <string name="floating_tl">Floating TL</string>
+    <string name="setting_attach_media_not_trim_title">Do not trim attached image</string>
+    <string name="setting_attach_media_not_trim_description">Actually, it\'s best to expand it to make it easier to see on the timeline, but there is a possibility that the part of the copyright notation will be cut off.</string>
 </resources>

@@ -2,7 +2,11 @@ package io.github.takusan23.kaisendonmk2.Fragment
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -14,6 +18,9 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE
+import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.room.Room
 import com.bumptech.glide.Glide
@@ -368,6 +375,7 @@ class TimeLineFragment : Fragment() {
                 timeLineAdapter.mainActivity = mainActivity
             }
             adapter = timeLineAdapter
+            // 区切り線
             val itemDecoration = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
             addItemDecoration(itemDecoration)
         }
